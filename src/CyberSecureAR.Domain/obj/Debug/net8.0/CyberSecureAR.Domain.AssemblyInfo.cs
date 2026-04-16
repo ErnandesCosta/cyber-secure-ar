@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CyberSecureAR.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+83e1a299ea2b75bd5b5c3843729a6320d7565af1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cc026fc136937c33e7ec269fda7a2f78b9dd98a0")]
 [assembly: System.Reflection.AssemblyProductAttribute("CyberSecureAR.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CyberSecureAR.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

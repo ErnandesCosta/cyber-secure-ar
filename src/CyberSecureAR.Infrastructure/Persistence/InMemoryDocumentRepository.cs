@@ -4,50 +4,59 @@ using CyberSecureAR.Domain.Enums;
 
 namespace CyberSecureAR.Infrastructure.Persistence;
 
-public class InMemoryUserRepository : IUserRepository
+public class InMemoryDocumentRepository : IDocumentRepository
 {
-    private readonly List<User> _users;
+    private readonly List<Document> _documents = DocumentsData.GetSeedDocuments();
 
-    public InMemoryUserRepository()
+    public Task<IEnumerable<Document>> GetByClassificationAsync(
+        DocumentClassification maxClassification)
     {
-        // Usuários de teste para a demo
-        _users =
-        [
-            User.Create(
-                username: "tecnico.joao",
-                passwordHash: BCrypt.Net.BCrypt.HashPassword("Tecnico@123"),
-                fullName: "João Silva",
-                department: "Operação de Campo",
-                role: UserRole.Technician
-            ),
-            User.Create(
-                username: "especialista.ana",
-                passwordHash: BCrypt.Net.BCrypt.HashPassword("Especialista@123"),
-                fullName: "Ana Souza",
-                department: "Engenharia",
-                role: UserRole.Specialist
-            ),
-            User.Create(
-                username: "gestor.carlos",
-                passwordHash: BCrypt.Net.BCrypt.HashPassword("Gestor@123"),
-                fullName: "Carlos Menezes",
-                department: "Diretoria Operacional",
-                role: UserRole.Manager
-            )
-        ];
+        var result = _documents
+            .Where(d => d.Classification <= maxClassification);
+        return Task.FromResult(result);
     }
 
-    public Task<User?> GetByUsernameAsync(string username)
+    public Task<IEnumerable<Document>> SearchAsync(
+        string query,
+        DocumentClassification maxClassification)
     {
-        var user = _users.FirstOrDefault(u =>
-            u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)
-        );
-        return Task.FromResult(user);
-    }
+        var lower = query.ToLowerInvariant();
+        var words = lower.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                         .Where(w => w.Length > 3)
+                         .ToList();
 
-    public Task<User?> GetByIdAsync(Guid id)
-    {
-        var user = _users.FirstOrDefault(u => u.Id == id);
-        return Task.FromResult(user);
+        // Documentos autorizados para esse perfil
+        var authorized = _documents
+            .Where(d => d.Classification <= maxClassification)
+            .ToList();
+
+        // Busca por relevância dentro dos autorizados
+        var matched = authorized
+            .Where(d =>
+            {
+                var titleLower   = d.Title.ToLowerInvariant();
+                var contentLower = d.Content.ToLowerInvariant();
+                var catLower     = d.Category.ToLowerInvariant();
+
+                // Match exato na query completa
+                if (titleLower.Contains(lower) ||
+                    contentLower.Contains(lower) ||
+                    catLower.Contains(lower))
+                    return true;
+
+                // Match por palavras individuais
+                return words.Any(w =>
+                    titleLower.Contains(w) ||
+                    contentLower.Contains(w) ||
+                    catLower.Contains(w));
+            })
+            .ToList();
+
+        // Se não encontrou match, retorna APENAS os autorizados
+        // mas SEM os confidenciais para perfis menores
+        if (!matched.Any())
+            matched = authorized;
+
+        return Task.FromResult<IEnumerable<Document>>(matched);
     }
 }

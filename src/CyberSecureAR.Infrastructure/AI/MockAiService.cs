@@ -1,5 +1,6 @@
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Domain.Entities;
+using CyberSecureAR.Domain.Enums;
 
 namespace CyberSecureAR.Infrastructure.AI;
 
@@ -12,25 +13,35 @@ public class MockAiService : IAIService
         var docs = context.ToList();
 
         if (!docs.Any())
-        {
             return Task.FromResult(
-                "Não encontrei documentos autorizados relacionados à sua pergunta. " +
-                "Verifique se você tem permissão para acessar essa informação."
+                "Não encontrei documentos autorizados para sua pergunta. " +
+                "Você pode não ter permissão para acessar essa informação."
             );
-        }
 
-        var response = "Com base nos documentos autorizados para seu perfil:\n\n";
+        var response = $"Com base nos documentos autorizados para seu perfil:\n\n";
 
-        foreach (var doc in docs.Take(2))
+        foreach (var doc in docs.Take(3))
         {
-            var preview = doc.Content.Length > 300
-                ? doc.Content[..300] + "..."
+            var classLabel = doc.Classification switch
+            {
+                DocumentClassification.Public       => "🟢 Público",
+                DocumentClassification.Internal     => "🔵 Interno",
+                DocumentClassification.Restricted   => "🟡 Restrito",
+                DocumentClassification.Confidential => "🔴 Confidencial",
+                _ => "Desconhecido"
+            };
+
+            var preview = doc.Content.Length > 250
+                ? doc.Content[..250] + "..."
                 : doc.Content;
 
-            response += $"📄 **{doc.Title}**\n{preview}\n\n";
+            response += $"📄 **{doc.Title}** [{classLabel}]\n";
+            response += $"{preview}\n\n";
         }
 
-        response += $"_(Resposta gerada com base em {docs.Count} documento(s) autorizado(s) para seu perfil.)_";
+        response += $"---\n";
+        response += $"🔒 Exibindo {Math.Min(docs.Count, 3)} de {docs.Count} " +
+                    $"documento(s) autorizado(s) para seu perfil.";
 
         return Task.FromResult(response);
     }

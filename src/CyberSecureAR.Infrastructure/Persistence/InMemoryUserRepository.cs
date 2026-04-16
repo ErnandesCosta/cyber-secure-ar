@@ -4,33 +4,49 @@ using CyberSecureAR.Domain.Enums;
 
 namespace CyberSecureAR.Infrastructure.Persistence;
 
-public class InMemoryDocumentRepository : IDocumentRepository
+public class InMemoryUserRepository : IUserRepository
 {
-    private readonly List<Document> _documents = DocumentsData.GetSeedDocuments();
+    private readonly List<User> _users;
 
-    public Task<IEnumerable<Document>> GetByClassificationAsync(
-        DocumentClassification maxClassification)
+    public InMemoryUserRepository()
     {
-        var result = _documents
-            .Where(d => d.Classification <= maxClassification);
-
-        return Task.FromResult(result);
+        _users =
+        [
+            User.Create(
+                username:     "tecnico.joao",
+                passwordHash: BCrypt.Net.BCrypt.HashPassword("Tecnico@123"),
+                fullName:     "João Silva",
+                department:   "Operação de Campo",
+                role:         UserRole.Technician
+            ),
+            User.Create(
+                username:     "especialista.ana",
+                passwordHash: BCrypt.Net.BCrypt.HashPassword("Especialista@123"),
+                fullName:     "Ana Souza",
+                department:   "Engenharia",
+                role:         UserRole.Specialist
+            ),
+            User.Create(
+                username:     "gestor.carlos",
+                passwordHash: BCrypt.Net.BCrypt.HashPassword("Gestor@123"),
+                fullName:     "Carlos Menezes",
+                department:   "Diretoria Operacional",
+                role:         UserRole.Manager
+            )
+        ];
     }
 
-    public Task<IEnumerable<Document>> SearchAsync(
-        string query,
-        DocumentClassification maxClassification)
+    public Task<User?> GetByUsernameAsync(string username)
     {
-        var lower = query.ToLowerInvariant();
+        var user = _users.FirstOrDefault(u =>
+            u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)
+        );
+        return Task.FromResult(user);
+    }
 
-        var result = _documents
-            .Where(d => d.Classification <= maxClassification)
-            .Where(d =>
-                d.Title.ToLowerInvariant().Contains(lower) ||
-                d.Content.ToLowerInvariant().Contains(lower) ||
-                d.Category.ToLowerInvariant().Contains(lower)
-            );
-
-        return Task.FromResult(result);
+    public Task<User?> GetByIdAsync(Guid id)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id);
+        return Task.FromResult(user);
     }
 }
