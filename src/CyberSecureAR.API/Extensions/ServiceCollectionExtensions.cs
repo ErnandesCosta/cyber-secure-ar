@@ -1,4 +1,5 @@
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Application.UseCases;
 using CyberSecureAR.Infrastructure.AI;
@@ -17,25 +18,15 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Token config
         services.Configure<TokenConfiguration>(
             configuration.GetSection("TokenConfiguration")
         );
 
-        // Auth
         services.AddScoped<ITokenService, JwtTokenService>();
-
-        // Repositories
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         services.AddSingleton<IDocumentRepository, InMemoryDocumentRepository>();
-
-        // AI
         services.AddScoped<IAIService, MockAiService>();
-
-        // Security
         services.AddScoped<ISensitiveDataFilter, SensitiveDataFilter>();
-
-        // Audit — Singleton para persistir logs em memória durante a sessão
         services.AddSingleton<IAuditService, AuditService>();
 
         return services;
@@ -66,6 +57,9 @@ public static class ServiceCollectionExtensions
             })
             .AddJwtBearer(options =>
             {
+                // CHAVE DA CORREÇÃO — desabilita remapeamento interno do JwtBearer
+                options.MapInboundClaims = false;
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -77,7 +71,10 @@ public static class ServiceCollectionExtensions
                     ValidateAudience = true,
                     ValidAudience    = tokenConfig.Audience,
                     ValidateLifetime = true,
-                    ClockSkew        = TimeSpan.Zero
+                    ClockSkew        = TimeSpan.Zero,
+                    // Garante que os nomes dos claims não são remapeados
+                    NameClaimType    = "username",
+                    RoleClaimType    = "role"
                 };
 
                 options.Events = new JwtBearerEvents
