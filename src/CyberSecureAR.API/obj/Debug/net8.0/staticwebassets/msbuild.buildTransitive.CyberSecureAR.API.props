@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\CyberSecureAR.API.props" />
-</Project>

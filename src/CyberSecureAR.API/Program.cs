@@ -45,12 +45,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?? new[] { "http://localhost:5173", "http://localhost:3000" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactClient", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173", "http://localhost:3000")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

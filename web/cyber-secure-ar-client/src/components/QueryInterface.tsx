@@ -3,13 +3,28 @@ import { useQuery } from "../hooks/useQuery";
 import { useAuth } from "../hooks/useAuth";
 import { LoadingSpinner } from "./LoadingSpinner";
 
-const SUGGESTED_QUESTIONS = [
-  "Qual é o procedimento de inspeção de válvulas?",
-  "Quais são as regras de segurança em campo?",
-  "Como fazer o checklist diário de operação?",
-  "Mostre o relatório de manutenção preditiva.",
-  "Quais são os planos estratégicos da empresa?",
-];
+const SUGGESTED_QUESTIONS = {
+  Technician: [
+    "Qual é o procedimento de inspeção de válvulas?",
+    "Quais são as regras de segurança em campo?",
+    "Como fazer o checklist diário de operação?",
+  ],
+  Specialist: [
+    "Mostre o relatório de manutenção preditiva.",
+    "Qual é o passo a passo para calibração de sensores?",
+    "Como diagnosticar anomalias no painel?",
+  ],
+  Manager: [
+    "Quais são os planos estratégicos da empresa?",
+    "Resumo do status de conformidade de segurança.",
+    "Detalhes das regras de auditoria operacional.",
+  ],
+  default: [
+    "Qual é o procedimento de inspeção de válvulas?",
+    "Quais são as regras de segurança em campo?",
+    "Como fazer o checklist diário de operação?",
+  ],
+};
 
 const getRoleBadgeColor = (role: string) => {
   switch (role) {
@@ -26,6 +41,11 @@ export const QueryInterface = () => {
   const { user, logout } = useAuth();
   const { response, isLoading, error, sendQuery, reset } = useQuery();
   const [question, setQuestion] = useState("");
+
+  const suggestions = user
+    ? SUGGESTED_QUESTIONS[user.role as keyof typeof SUGGESTED_QUESTIONS] ??
+      SUGGESTED_QUESTIONS.default
+    : SUGGESTED_QUESTIONS.default;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,9 +86,9 @@ export const QueryInterface = () => {
       <main className="assistant-main">
         {/* Sugestões */}
         <div className="suggestions">
-          <p className="suggestions-label">Perguntas sugeridas:</p>
+          <p className="suggestions-label">Perguntas sugeridas para seu perfil:</p>
           <div className="suggestions-list">
-            {SUGGESTED_QUESTIONS.map((q) => (
+            {suggestions.map((q) => (
               <button
                 key={q}
                 className="suggestion-chip"
@@ -78,6 +98,9 @@ export const QueryInterface = () => {
               </button>
             ))}
           </div>
+        </div>
+        <div className="assistant-note">
+          🔐 Apenas informações autorizadas para seu perfil são usadas na resposta.
         </div>
 
         {/* Área de resposta */}

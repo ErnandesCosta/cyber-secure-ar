@@ -1,47 +1,67 @@
 import { useState, type FormEvent } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import type { LoginRequest } from "../types/auth";
 
-export const LoginForm = () => {
-  const { login, isLoading, error } = useAuth();
+const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
 
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    deviceId: import.meta.env.VITE_DEVICE_ID as string || "AR-GLASSES-DEMO-001",
-  });
+export function LoginForm() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!username.trim() || !password.trim()) {
+      setError("Preencha usuário e senha para continuar.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await login(form);
-    } catch {
-      // erro tratado no context
+      const payload: LoginRequest = {
+        username: username.trim(),
+        password: password.trim(),
+        deviceId: DEVICE_ID,
+      };
+
+      await login(payload);
+      navigate("/assistant");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Falha ao autenticar.";
+      setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-
         <div className="login-header">
           <div className="ar-icon">🥽</div>
           <h1>CyberSecure AR</h1>
-          <p>Acesso Corporativo Seguro via Smart Glasses</p>
+          <p>Autentique-se para acessar o assistente operacional de segurança.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form">
-
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Usuário</label>
             <input
               id="username"
               type="text"
-              placeholder="tecnico.joao"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Digite seu usuário"
               autoComplete="username"
+              disabled={loading}
             />
           </div>
 
@@ -50,49 +70,30 @@ export const LoginForm = () => {
             <input
               id="password"
               type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite sua senha"
               autoComplete="current-password"
+              disabled={loading}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="deviceId">Device ID (Smart Glasses)</label>
-            <input
-              id="deviceId"
-              type="text"
-              value={form.deviceId}
-              readOnly
-              className="readonly"
-            />
-          </div>
+          {error && <div className="error-box">{error}</div>}
 
-          {error && (
-            <div className="error-box">
-              ⚠️ {error}
-            </div>
-          )}
-
-          {isLoading ? (
-            <LoadingSpinner message="Autenticando..." />
-          ) : (
-            <button type="submit" className="btn-primary">
-              Entrar com Identidade Corporativa
-            </button>
-          )}
-
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? "Acessando..." : "Entrar"}
+          </button>
         </form>
 
         <div className="login-hint">
-          <p className="hint-title">Usuários de teste:</p>
-          <p><strong>Técnico:</strong> tecnico.joao / Tecnico@123</p>
-          <p><strong>Especialista:</strong> especialista.ana / Especialista@123</p>
-          <p><strong>Gestor:</strong> gestor.carlos / Gestor@123</p>
+          <div className="hint-title">Dica de acesso</div>
+          <p>Use um usuário válido e mantenha seu Device ID protegido.</p>
+          <p style={{ marginTop: "0.75rem", color: "#cbd5e1", fontSize: "0.8rem" }}>
+            Device ID ativo: <strong>{DEVICE_ID}</strong>
+          </p>
         </div>
-
       </div>
     </div>
   );
-};
+}
+

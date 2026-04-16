@@ -1,3 +1,4 @@
+using System.Linq;
 using CyberSecureAR.Application.DTOs;
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Application.Validators;
@@ -52,10 +53,12 @@ public class QueryAssistantUseCase(
         };
 
         // 4. Busca documentos permitidos para o perfil
-        var documents = await documentRepository.SearchAsync(
+        var documents = (await documentRepository.SearchAsync(
             dto.Question,
             maxClassification
-        );
+        ))
+            .Where(d => d.Classification <= maxClassification)
+            .ToList();
 
         // 5. Gera resposta com IA usando apenas o contexto autorizado
         var rawResponse = await aiService.GenerateResponseAsync(

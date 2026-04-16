@@ -52,11 +52,8 @@ public class InMemoryDocumentRepository : IDocumentRepository
             })
             .ToList();
 
-        // Se não encontrou match, retorna APENAS os autorizados
-        // mas SEM os confidenciais para perfis menores
-        if (!matched.Any())
-            matched = authorized;
-
+        // Se não encontrou match, não retorna documentos adicionais.
+        // Isso evita vazamento de contexto para consultas genéricas ou fora do escopo.
         return Task.FromResult<IEnumerable<Document>>(matched);
     }
 }

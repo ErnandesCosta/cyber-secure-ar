@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Claims;
 using CyberSecureAR.API.Models;
 using CyberSecureAR.Application.DTOs;
@@ -25,13 +26,37 @@ public class AssistantController(
     {
         try
         {
+            if (dto is null || string.IsNullOrWhiteSpace(dto.Question))
+            {
+                return BadRequest(ApiErrorResponse.Create(
+                    "VALIDATION_ERROR", "Pergunta inválida.", 400));
+            }
+
             var claim = ExtractClaim();
             if (claim is null)
                 return Unauthorized(ApiErrorResponse.Create(
                     "UNAUTHORIZED", "Token inválido ou expirado.", 401));
 
-            var ip       = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var response = await queryAssistantUseCase.ExecuteAsync(dto, claim, ip);
+            var headerDeviceId = HttpContext.Request.Headers["X-Device-Id"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(headerDeviceId))
+            {
+                return BadRequest(ApiErrorResponse.Create(
+                    "VALIDATION_ERROR", "Cabeçalho X-Device-Id é obrigatório.", 400));
+            }
+
+            if (!string.Equals(headerDeviceId, claim.DeviceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            if (!claim.DeviceTrusted)
+            {
+                return Forbid();
+            }
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var secureDto = dto with { DeviceId = headerDeviceId };
+            var response = await queryAssistantUseCase.ExecuteAsync(secureDto, claim, ip);
 
             return Ok(response);
         }
@@ -51,10 +76,6 @@ public class AssistantController(
 
     private AccessClaim? ExtractClaim()
     {
-        // Debug — mostra todos os claims que chegam
-        foreach (var c in User.Claims)
-            Console.WriteLine($"[CLAIM] {c.Type} = {c.Value}");
-
         // Tenta sub direto, depois o formato longo do .NET
         var userId = User.FindFirst("sub")?.Value
                   ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -65,8 +86,6 @@ public class AssistantController(
         var role          = User.FindFirst("role")?.Value;
         var deviceId      = User.FindFirst("deviceId")?.Value;
         var deviceTrusted = User.FindFirst("deviceTrusted")?.Value;
-
-        Console.WriteLine($"[DEBUG] userId={userId} | role={role} | deviceId={deviceId}");
 
         if (userId is null || role is null)
             return null;

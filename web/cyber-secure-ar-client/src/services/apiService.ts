@@ -1,7 +1,13 @@
 import { tokenStorage } from "../utils/tokenStorage";
 import type { LoginRequest, LoginResponse, UserProfile } from "../types/auth";
 import type { AssistantQueryDto, AssistantResponseDto } from "../types/query";
-import type { ApiErrorResponse } from "../types/api";
+
+interface ApiErrorResponse {
+  error: string;
+  message: string;
+  statusCode: number;
+  timestamp: string;
+}
 
 const BASE_URL  = import.meta.env.VITE_API_URL   || "http://localhost:5000";
 const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
