@@ -4,8 +4,8 @@ public class AssistantQuery
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public string Question { get; private set; }
-    public string DeviceId { get; private set; }
+    public string Question { get; private set; } = string.Empty;
+    public string DeviceId { get; private set; } = string.Empty;
     public DateTime AskedAt { get; private set; }
 
     private AssistantQuery() { }

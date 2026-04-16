@@ -1,0 +1,16 @@
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\bin\Debug\net8.0\CyberSecureAR.Application.deps.json
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\bin\Debug\net8.0\CyberSecureAR.Application.dll
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\bin\Debug\net8.0\CyberSecureAR.Application.pdb
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\bin\Debug\net8.0\CyberSecureAR.Domain.dll
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\bin\Debug\net8.0\CyberSecureAR.Domain.pdb
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.csproj.AssemblyReference.cache
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.AssemblyInfoInputs.cache
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.AssemblyInfo.cs
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.csproj.CoreCompileInputs.cache
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.sourcelink.json
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSec.C1DB02E1.Up2Date
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.dll
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\refint\CyberSecureAR.Application.dll
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\CyberSecureAR.Application.pdb
+C:\Users\jerna\OneDrive\Desktop\cyber-secure-ar\src\CyberSecureAR.Application\obj\Debug\net8.0\ref\CyberSecureAR.Application.dll

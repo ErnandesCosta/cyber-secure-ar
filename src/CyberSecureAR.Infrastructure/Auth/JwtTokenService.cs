@@ -16,33 +16,29 @@ public class JwtTokenService(IOptions<TokenConfiguration> config) : ITokenServic
 
     public string GenerateToken(User user, string deviceId)
     {
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_config.SecretKey)
-        );
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+        JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-        var credentials = new SigningCredentials(
-            key,
-            SecurityAlgorithms.HmacSha256
-        );
+        var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        // Claims carregam identidade, perfil e contexto de dispositivo
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("username", user.Username),
-            new Claim("fullName", user.FullName),
-            new Claim("department", user.Department),
-            new Claim("role", user.Role.ToString()),
-            new Claim("deviceId", deviceId),
+            new Claim("sub",           user.Id.ToString()),
+            new Claim("jti",           Guid.NewGuid().ToString()),
+            new Claim("username",      user.Username),
+            new Claim("fullName",      user.FullName),
+            new Claim("department",    user.Department),
+            new Claim("role",          user.Role.ToString()),
+            new Claim("deviceId",      deviceId),
             new Claim("deviceTrusted", "true")
         };
 
         var token = new JwtSecurityToken(
-            issuer: _config.Issuer,
-            audience: _config.Audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(_config.ExpirationHours),
+            issuer:             _config.Issuer,
+            audience:           _config.Audience,
+            claims:             claims,
+            expires:            DateTime.UtcNow.AddHours(_config.ExpirationHours),
             signingCredentials: credentials
         );
 
@@ -53,30 +49,32 @@ public class JwtTokenService(IOptions<TokenConfiguration> config) : ITokenServic
     {
         try
         {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_config.SecretKey);
+            var key     = Encoding.UTF8.GetBytes(_config.SecretKey);
 
             handler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidIssuer = _config.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _config.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                IssuerSigningKey         = new SymmetricSecurityKey(key),
+                ValidateIssuer           = true,
+                ValidIssuer              = _config.Issuer,
+                ValidateAudience         = true,
+                ValidAudience            = _config.Audience,
+                ValidateLifetime         = true,
+                ClockSkew                = TimeSpan.Zero
             }, out var validatedToken);
 
             var jwt = (JwtSecurityToken)validatedToken;
 
             return new AccessClaim(
-                UserId: Guid.Parse(jwt.Subject),
-                Username: jwt.Claims.First(c => c.Type == "username").Value,
-                FullName: jwt.Claims.First(c => c.Type == "fullName").Value,
-                Department: jwt.Claims.First(c => c.Type == "department").Value,
-                Role: Enum.Parse<UserRole>(jwt.Claims.First(c => c.Type == "role").Value),
-                DeviceId: jwt.Claims.First(c => c.Type == "deviceId").Value,
+                UserId:        Guid.Parse(jwt.Claims.First(c => c.Type == "sub").Value),
+                Username:      jwt.Claims.First(c => c.Type == "username").Value,
+                FullName:      jwt.Claims.First(c => c.Type == "fullName").Value,
+                Department:    jwt.Claims.First(c => c.Type == "department").Value,
+                Role:          Enum.Parse<UserRole>(jwt.Claims.First(c => c.Type == "role").Value),
+                DeviceId:      jwt.Claims.First(c => c.Type == "deviceId").Value,
                 DeviceTrusted: bool.Parse(jwt.Claims.First(c => c.Type == "deviceTrusted").Value)
             );
         }

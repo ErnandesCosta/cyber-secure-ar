@@ -5,10 +5,10 @@ namespace CyberSecureAR.Domain.Entities;
 public class User
 {
     public Guid Id { get; private set; }
-    public string Username { get; private set; }
-    public string PasswordHash { get; private set; }
-    public string FullName { get; private set; }
-    public string Department { get; private set; }
+    public string Username { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
+    public string FullName { get; private set; } = string.Empty;
+    public string Department { get; private set; } = string.Empty;
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }

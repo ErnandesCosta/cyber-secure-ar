@@ -4,6 +4,7 @@ using CyberSecureAR.API.Models;
 using CyberSecureAR.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CyberSecureAR.API.Controllers;
 
@@ -44,18 +45,29 @@ public class AuthController(AuthenticateUserUseCase authenticateUserUseCase) : C
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Me()
     {
-        var userId     = User.FindFirst("sub")?.Value;
+        // No .NET o claim "sub" pode vir como NameIdentifier
+        var userId = User.FindFirst("sub")?.Value
+                  ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
         var username   = User.FindFirst("username")?.Value;
         var fullName   = User.FindFirst("fullName")?.Value;
         var department = User.FindFirst("department")?.Value;
         var role       = User.FindFirst("role")?.Value;
 
+        if (userId is null)
+            return Unauthorized(ApiErrorResponse.Create(
+                "UNAUTHORIZED", "Token inválido.", 401));
+
+        if (!Guid.TryParse(userId, out var parsedId))
+            return Unauthorized(ApiErrorResponse.Create(
+                "UNAUTHORIZED", "ID de usuário inválido no token.", 401));
+
         var profile = new UserProfileDto(
-            Id:         Guid.Parse(userId!),
-            Username:   username!,
-            FullName:   fullName!,
-            Department: department!,
-            Role:       role!
+            Id:         parsedId,
+            Username:   username   ?? string.Empty,
+            FullName:   fullName   ?? string.Empty,
+            Department: department ?? string.Empty,
+            Role:       role       ?? string.Empty
         );
 
         return Ok(profile);

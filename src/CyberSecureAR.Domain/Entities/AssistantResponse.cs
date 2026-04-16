@@ -6,7 +6,7 @@ public class AssistantResponse
 {
     public Guid Id { get; private set; }
     public Guid QueryId { get; private set; }
-    public string Content { get; private set; }
+    public string Content { get; private set; } = string.Empty;
     public bool WasFiltered { get; private set; }
     public AccessLevel AccessLevel { get; private set; }
     public DateTime GeneratedAt { get; private set; }
