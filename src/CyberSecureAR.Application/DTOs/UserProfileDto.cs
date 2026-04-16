@@ -1,9 +1,9 @@
 namespace CyberSecureAR.Application.DTOs;
 
-public record LoginResponse(
-    string Token,
+public record UserProfileDto(
+    Guid Id,
+    string Username,
     string FullName,
-    string Role,
     string Department,
-    DateTime ExpiresAt
+    string Role
 );
