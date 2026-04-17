@@ -189,7 +189,7 @@ export const DashboardPage = () => {
         </section>
 
         {/* ── DISPOSITIVOS BLOQUEADOS (Fase 3) ── */}
-        <SecurityPanel />
+                {isManager && <SecurityPanel />}
 
       </main>
     </div>
