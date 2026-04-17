@@ -1,7 +1,27 @@
+import { useState } from "react";
 import { useBlockedDevices } from "../hooks/useBlockedDevices";
 
 export const SecurityPanel = () => {
   const { devices, isLoading, error, unblock } = useBlockedDevices();
+  const [unblocking, setUnblocking] = useState<string | null>(null);
+  const [unblockSuccess, setUnblockSuccess] = useState<string | null>(null);
+  const [unblockError, setUnblockError] = useState<string | null>(null);
+
+  const handleUnblock = async (deviceId: string) => {
+    setUnblocking(deviceId);
+    setUnblockSuccess(null);
+    setUnblockError(null);
+    try {
+      await unblock(deviceId);
+      setUnblockSuccess(`Dispositivo ${deviceId} desbloqueado com sucesso.`);
+      setTimeout(() => setUnblockSuccess(null), 4000);
+    } catch {
+      setUnblockError(`Erro ao desbloquear ${deviceId}. Tente novamente.`);
+      setTimeout(() => setUnblockError(null), 5000);
+    } finally {
+      setUnblocking(null);
+    }
+  };
 
   return (
     <section className="dashboard-panel">
@@ -15,6 +35,13 @@ export const SecurityPanel = () => {
         <span className="refresh-note">Atualiza a cada 15s</span>
       </div>
 
+      {unblockSuccess && (
+        <p className="success-text">{unblockSuccess}</p>
+      )}
+      {unblockError && (
+        <p className="error-text">{unblockError}</p>
+      )}
+
       {isLoading ? (
         <p>Carregando...</p>
       ) : error ? (
@@ -24,7 +51,7 @@ export const SecurityPanel = () => {
       ) : (
         <ul className="audit-list">
           {devices.map((d) => (
-            <li key={d.deviceId}> {/* Correção: Substituído o '>' solto por <li> com a key */}
+            <li key={d.deviceId}>
               <div className="alert-row">
                 <span className="alert-action">{d.deviceId}</span>
                 <span className="event-badge blocked">Bloqueado</span>
@@ -41,9 +68,10 @@ export const SecurityPanel = () => {
               </div>
               <button
                 className="btn-unblock"
-                onClick={() => unblock(d.deviceId)}
+                onClick={() => handleUnblock(d.deviceId)}
+                disabled={unblocking === d.deviceId}
               >
-                Desbloquear
+                {unblocking === d.deviceId ? "Desbloqueando..." : "Desbloquear"}
               </button>
             </li>
           ))}
