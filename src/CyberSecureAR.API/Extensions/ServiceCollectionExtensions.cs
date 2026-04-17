@@ -30,10 +30,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAuditService, AuditService>();
         services.AddSingleton<IDeviceBlockService, DeviceBlockService>();
         services.AddSingleton<IAnomalyDetector, AnomalyDetector>();
-        services.AddSingleton<IDeviceBlockService, DeviceBlockService>();
-        services.AddSingleton<IAnomalyDetector, AnomalyDetector>();
-
-
 
         return services;
     }
@@ -43,7 +39,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuthenticateUserUseCase>();
         services.AddScoped<QueryAssistantUseCase>();
         services.AddScoped<FilterResponseUseCase>();
-
         return services;
     }
 
@@ -63,9 +58,7 @@ public static class ServiceCollectionExtensions
             })
             .AddJwtBearer(options =>
             {
-                // CHAVE DA CORREÇÃO — desabilita remapeamento interno do JwtBearer
                 options.MapInboundClaims = false;
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -78,7 +71,6 @@ public static class ServiceCollectionExtensions
                     ValidAudience = tokenConfig.Audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero,
-                    // Garante que os nomes dos claims não são remapeados
                     NameClaimType = "username",
                     RoleClaimType = "role"
                 };
@@ -92,7 +84,6 @@ public static class ServiceCollectionExtensions
                         {
                             ctx.Token = tokenValues.FirstOrDefault();
                         }
-
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = ctx =>
