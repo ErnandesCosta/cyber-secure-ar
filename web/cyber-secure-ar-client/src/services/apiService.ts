@@ -1,6 +1,8 @@
 import { tokenStorage } from "../utils/tokenStorage";
 import type { LoginRequest, LoginResponse, UserProfile } from "../types/auth";
 import type { AssistantQueryDto, AssistantResponseDto } from "../types/query";
+import type { SecurityAuditEvent } from "../types/audit";
+import type { AuditSummary } from "../types/auditSummary";
 
 interface ApiErrorResponse {
   error: string;
@@ -57,5 +59,19 @@ export const apiService = {
       body:    JSON.stringify({ ...data, deviceId: DEVICE_ID }),
     });
     return handleResponse<AssistantResponseDto>(res);
+  },
+
+  getAuditEvents: async (): Promise<SecurityAuditEvent[]> => {
+    const res = await fetch(`${BASE_URL}/api/audit/events`, {
+      headers: getHeaders(),
+    });
+    return handleResponse<SecurityAuditEvent[]>(res);
+  },
+
+  getAuditSummary: async (): Promise<AuditSummary> => {
+    const res = await fetch(`${BASE_URL}/api/audit/summary`, {
+      headers: getHeaders(),
+    });
+    return handleResponse<AuditSummary>(res);
   },
 };

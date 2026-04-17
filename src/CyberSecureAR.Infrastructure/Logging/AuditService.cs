@@ -49,4 +49,10 @@ public class AuditService(ILogger<AuditService> logger) : IAuditService
         var result = _audits.Where(a => a.UserId == userId);
         return Task.FromResult(result);
     }
+
+    public Task<IEnumerable<SecurityAudit>> GetAllAsync()
+    {
+        var result = _audits.AsEnumerable();
+        return Task.FromResult(result);
+    }
 }

@@ -31,6 +31,8 @@
 - [Endpoints da API](#-endpoints-da-api)
 - [Usuários de Teste](#-usuários-de-teste)
 - [Fluxo de Segurança](#-fluxo-de-segurança)
+- [Como a IA trabalha](#-como-a-ia-trabalha)
+- [SOC — Centro de Operações de Segurança](#-soc--centro-de-operaes-de-seguran-a)
 - [Contribuindo](#-contribuindo)
 - [Equipe](#-equipe)
 
@@ -87,8 +89,6 @@ O projeto segue os princípios de **Clean Architecture**, garantindo separação
 ┌──────────────────────▼──────────────────────────┐
 │ PostgreSQL 16 │
 └─────────────────────────────────────────────────┘
-
-text
 
 ### Camadas do Backend
 
@@ -265,54 +265,51 @@ Frontend — `web/cyber-secure-ar-client/.env`
 VITE_API_URL=http://localhost:5000
 VITE_DEVICE_ID=AR-GLASSES-DEMO-001
 ```
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=cybersecure;Username=postgres;Password=postgres"
-  },
-  "TokenConfiguration": {
-    "SecretKey": "sua-chave-secreta-minimo-32-caracteres",
-    "Issuer": "CyberSecureAR",
-    "Audience": "CyberSecureAR.Client",
-    "ExpirationHours": 8
-  }
-}
-Frontend — web/cyber-secure-ar-client/.env
-```text
-VITE_API_URL=http://localhost:5000
-VITE_DEVICE_ID=AR-GLASSES-DEMO-001
-```
-📡 Endpoints da API
-Autenticação
-Método	Endpoint	Descrição	Auth
-POST	/api/auth/login	Realiza login e retorna JWT	❌
-GET	/api/auth/me	Retorna perfil do usuário autenticado	✅
-Assistente IA
-Método	Endpoint	Descrição	Auth
-POST	/api/assistant/query	Envia consulta ao assistente de segurança	✅
-Exemplos de Request
-Login:
 
-json
+📡 Endpoints da API
+
+### Autenticação
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| POST | `/api/auth/login` | Realiza login e retorna JWT | ❌ |
+| GET | `/api/auth/me` | Retorna perfil do usuário autenticado | ✅ |
+
+### Assistente IA
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| POST | `/api/assistant/query` | Envia consulta ao assistente de segurança | ✅ |
+| GET | `/api/audit/events` | Retorna eventos de auditoria do usuário | ✅ |
+
+### Exemplos de Request
+
+#### Login
+```json
 POST /api/auth/login
 {
   "username": "tecnico.joao",
   "password": "Tecnico@123",
   "deviceId": "AR-GLASSES-DEMO-001"
 }
-Consulta ao Assistente:
+```
 
-json
+#### Consulta ao Assistente
+```json
 POST /api/assistant/query
 Authorization: Bearer {token}
 {
   "question": "Qual o procedimento para manutenção da válvula V-201?",
   "deviceId": "AR-GLASSES-DEMO-001"
 }
-👥 Usuários de Teste
-Perfil	Usuário	Senha	Permissões
-Técnico	tecnico.joao	Tecnico@123	Consultas básicas de manutenção
-Especialista	especialista.ana	Especialista@123	Consultas avançadas + relatórios
-Gestor	gestor.carlos	Gestor@123	Acesso total + auditoria
-🛡 Fluxo de Segurança
+```
+
+### 👥 Usuários de Teste
+| Perfil | Usuário | Senha | Permissões |
+|---|---|---|---|
+| Técnico | tecnico.joao | Tecnico@123 | Consultas básicas de manutenção |
+| Especialista | especialista.ana | Especialista@123 | Consultas avançadas + relatórios |
+| Gestor | gestor.carlos | Gestor@123 | Acesso total + auditoria |
+
+### 🛡 Fluxo de Segurança
 1. Usuário faz login com usuário, senha e device ID.
 2. A API valida as credenciais e gera um JWT com claims.
 3. O `deviceId` é incluído no token e também enviado no cabeçalho `X-Device-Id`.
@@ -320,8 +317,25 @@ Gestor	gestor.carlos	Gestor@123	Acesso total + auditoria
 5. A IA usa apenas documentos autorizados para o perfil do usuário.
 6. A resposta é filtrada para remover dados sensíveis.
 7. Auditoria registra todas as consultas e bloqueios.
-Exceções de Segurança Tratadas
-Exceção	Código HTTP	Descrição
-SecurityViolationException	400	Consulta bloqueada por violar políticas
-UnauthorizedDomainAccessException	403	Acesso a domínio não autorizado para o perfil
-Token inválido/expirado	401	
+
+### 🤖 Como a IA trabalha
+- O texto do usuário é validado e o prompt é analisado para evitar injeção.
+- O assistente acessa apenas documentos permitidos pelo perfil do usuário.
+- A resposta é gerada pelo serviço de IA e, em seguida, passa por um filtro de dados sensíveis.
+- Se houver conteúdo confidencial, ele é bloqueado ou sanitizado antes de ser retornado.
+- Todas as interações são registradas para análise SOC.
+
+### 🛰 SOC — Centro de Operações de Segurança
+- Painel de auditoria com eventos permitidos e bloqueios.
+- Monitoramento de dispositivo, usuário e IP em tempo real.
+- Alertas de consultas não autorizadas ou comportamentos suspeitos.
+- Controle de acesso baseado em perfil e trust de dispositivo.
+- Logs de auditoria que permitem rastrear ações de segurança e conformidade.
+
+### Exceções de Segurança Tratadas
+| Exceção | Código HTTP | Descrição |
+|---|---|---|
+| SecurityViolationException | 400 | Consulta bloqueada por violar políticas |
+| UnauthorizedDomainAccessException | 403 | Acesso a domínio não autorizado para o perfil |
+| Token inválido/expirado | 401 | Autenticação necessária ou token expirado |
+	

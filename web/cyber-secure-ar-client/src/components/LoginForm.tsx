@@ -48,7 +48,7 @@ export function LoginForm() {
         <div className="login-header">
           <div className="ar-icon">🥽</div>
           <h1>CyberSecure AR</h1>
-          <p>Autentique-se para acessar o assistente operacional de segurança.</p>
+          <p>Entre no dashboard operacional SOC e acesse o assistente de campo.</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>

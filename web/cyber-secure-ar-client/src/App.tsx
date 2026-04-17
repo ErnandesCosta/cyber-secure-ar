@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthProvider";
-import { useAuth }      from "./hooks/useAuth";
-import { LoginPage }    from "./pages/LoginPage";
+import { useAuth } from "./hooks/useAuth";
+import { LoginPage } from "./pages/LoginPage";
 import { AssistantPage } from "./pages/AssistantPage";
+import { DashboardPage } from "./components/DashboardPage";
 import "./App.css";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -18,6 +19,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <AssistantPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard"
+      element={
+        <ProtectedRoute>
+          <DashboardPage />
         </ProtectedRoute>
       }
     />
