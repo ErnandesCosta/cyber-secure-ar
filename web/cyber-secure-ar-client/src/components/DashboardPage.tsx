@@ -4,26 +4,21 @@ import { useAuditEvents } from "../hooks/useAuditEvents";
 import { useAuditSummary } from "../hooks/useAuditSummary";
 import { useAuditTrends } from "../hooks/useAuditTrends";
 import { useAuditIncidents } from "../hooks/useAuditIncidents";
-// Adiciona no topo dos imports:
 import { SecurityPanel } from "./SecurityPanel";
-
-// Adiciona antes de </main>:
-<SecurityPanel />
-
 
 export const DashboardPage = () => {
   const { user, logout } = useAuth();
-  const { events,    isLoading: eventsLoading,    error: eventsError    } = useAuditEvents();
-  const { summary,   isLoading: summaryLoading,   error: summaryError   } = useAuditSummary();
-  const { trends,    isLoading: trendsLoading                           } = useAuditTrends();
+  const { events, isLoading: eventsLoading, error: eventsError } = useAuditEvents();
+  const { summary, isLoading: summaryLoading, error: summaryError } = useAuditSummary();
+  const { trends, isLoading: trendsLoading } = useAuditTrends();
   const { incidents, isLoading: incidentsLoading, error: incidentsError } = useAuditIncidents();
 
-  const isManager    = user?.role === "Manager";
-  const topActions   = summary?.topActions ?? [];
+  const isManager = user?.role === "Manager";
+  const topActions = summary?.topActions ?? [];
   const recentAlerts = events?.filter((e) => !e.wasAllowed) ?? [];
-  const alertCount   = recentAlerts.length;
-  const riskScore    = summary?.riskScore ?? 0;
-  const riskColor    = riskScore >= 70 ? "danger" : riskScore >= 40 ? "warning" : "safe";
+  const alertCount = recentAlerts.length;
+  const riskScore = summary?.riskScore ?? 0;
+  const riskColor = riskScore >= 70 ? "danger" : riskScore >= 40 ? "warning" : "safe";
 
   return (
     <div className="app-container">
@@ -192,6 +187,9 @@ export const DashboardPage = () => {
             <p>Nenhum alerta crítico identificado recentemente.</p>
           )}
         </section>
+
+        {/* ── DISPOSITIVOS BLOQUEADOS (Fase 3) ── */}
+        <SecurityPanel />
 
       </main>
     </div>
