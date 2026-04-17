@@ -1,22 +1,21 @@
 import { tokenStorage } from "../utils/tokenStorage";
 import type { LoginRequest, LoginResponse, UserProfile } from "../types/auth";
 import type { AssistantQueryDto, AssistantResponseDto } from "../types/query";
-import type { SecurityAuditEvent } from "../types/audit";
-import type { AuditSummary } from "../types/auditSummary";
+import type { ApiErrorResponse } from "../types/api";
+import type {
+  SecurityAuditDto,
+  AuditSummaryDto,
+  AuditTrendDto,
+  AuditIncidentDto,
+} from "../types/audit";
 
-interface ApiErrorResponse {
-  error: string;
-  message: string;
-  statusCode: number;
-  timestamp: string;
-}
-
-const BASE_URL  = import.meta.env.VITE_API_URL   || "http://localhost:5000";
+const BASE_URL  = import.meta.env.VITE_API_URL  || "http://localhost:5000";
 const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
 
 const getHeaders = (): HeadersInit => ({
-  "Content-Type": "application/json",
-  "X-Device-Id":  DEVICE_ID,
+  "Content-Type":    "application/json",
+  "X-Device-Id":     DEVICE_ID,
+  "X-Correlation-Id": crypto.randomUUID(),
   ...(tokenStorage.getToken()
     ? { Authorization: `Bearer ${tokenStorage.getToken()}` }
     : {}),
@@ -61,17 +60,31 @@ export const apiService = {
     return handleResponse<AssistantResponseDto>(res);
   },
 
-  getAuditEvents: async (): Promise<SecurityAuditEvent[]> => {
+  getAuditEvents: async (): Promise<SecurityAuditDto[]> => {
     const res = await fetch(`${BASE_URL}/api/audit/events`, {
       headers: getHeaders(),
     });
-    return handleResponse<SecurityAuditEvent[]>(res);
+    return handleResponse<SecurityAuditDto[]>(res);
   },
 
-  getAuditSummary: async (): Promise<AuditSummary> => {
+  getAuditSummary: async (): Promise<AuditSummaryDto> => {
     const res = await fetch(`${BASE_URL}/api/audit/summary`, {
       headers: getHeaders(),
     });
-    return handleResponse<AuditSummary>(res);
+    return handleResponse<AuditSummaryDto>(res);
+  },
+
+  getAuditTrends: async (): Promise<AuditTrendDto[]> => {
+    const res = await fetch(`${BASE_URL}/api/audit/trends`, {
+      headers: getHeaders(),
+    });
+    return handleResponse<AuditTrendDto[]>(res);
+  },
+
+  getAuditIncidents: async (): Promise<AuditIncidentDto[]> => {
+    const res = await fetch(`${BASE_URL}/api/audit/incidents`, {
+      headers: getHeaders(),
+    });
+    return handleResponse<AuditIncidentDto[]>(res);
   },
 };

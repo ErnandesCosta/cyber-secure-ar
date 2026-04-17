@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { apiService } from "../services/apiService";
-import type { SecurityAuditEvent } from "../types/audit";
+import type { SecurityAuditDto } from "../types/audit";
 
 const POLL_INTERVAL_MS = 10000;
 
 export const useAuditEvents = () => {
-  const [events, setEvents] = useState<SecurityAuditEvent[]>([]);
+  const [events, setEvents] = useState<SecurityAuditDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
