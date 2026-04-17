@@ -4,6 +4,12 @@ import { useAuditEvents } from "../hooks/useAuditEvents";
 import { useAuditSummary } from "../hooks/useAuditSummary";
 import { useAuditTrends } from "../hooks/useAuditTrends";
 import { useAuditIncidents } from "../hooks/useAuditIncidents";
+// Adiciona no topo dos imports:
+import { SecurityPanel } from "./SecurityPanel";
+
+// Adiciona antes de </main>:
+<SecurityPanel />
+
 
 export const DashboardPage = () => {
   const { user, logout } = useAuth();

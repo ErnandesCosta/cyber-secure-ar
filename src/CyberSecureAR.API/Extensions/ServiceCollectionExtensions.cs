@@ -28,6 +28,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAIService, MockAiService>();
         services.AddScoped<ISensitiveDataFilter, SensitiveDataFilter>();
         services.AddSingleton<IAuditService, AuditService>();
+        services.AddSingleton<IDeviceBlockService, DeviceBlockService>();
+        services.AddSingleton<IAnomalyDetector, AnomalyDetector>();
+        services.AddSingleton<IDeviceBlockService, DeviceBlockService>();
+        services.AddSingleton<IAnomalyDetector, AnomalyDetector>();
+
+
 
         return services;
     }
@@ -53,7 +59,7 @@ public static class ServiceCollectionExtensions
             .AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -66,15 +72,15 @@ public static class ServiceCollectionExtensions
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(tokenConfig.SecretKey)
                     ),
-                    ValidateIssuer   = true,
-                    ValidIssuer      = tokenConfig.Issuer,
+                    ValidateIssuer = true,
+                    ValidIssuer = tokenConfig.Issuer,
                     ValidateAudience = true,
-                    ValidAudience    = tokenConfig.Audience,
+                    ValidAudience = tokenConfig.Audience,
                     ValidateLifetime = true,
-                    ClockSkew        = TimeSpan.Zero,
+                    ClockSkew = TimeSpan.Zero,
                     // Garante que os nomes dos claims não são remapeados
-                    NameClaimType    = "username",
-                    RoleClaimType    = "role"
+                    NameClaimType = "username",
+                    RoleClaimType = "role"
                 };
 
                 options.Events = new JwtBearerEvents

@@ -1,97 +1,119 @@
-using System.Linq;
 using CyberSecureAR.Application.DTOs;
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Application.Validators;
 using CyberSecureAR.Domain.Entities;
-using CyberSecureAR.Domain.Enums;
 using CyberSecureAR.Domain.Exceptions;
 using CyberSecureAR.Domain.ValueObjects;
 
 namespace CyberSecureAR.Application.UseCases;
 
 public class QueryAssistantUseCase(
-    IDocumentRepository documentRepository,
-    IAIService aiService,
-    IAuditService auditService,
-    ISensitiveDataFilter sensitiveDataFilter
-)
+    IAIService           aiService,
+    IDocumentRepository  documentRepository,
+    IAuditService        auditService,
+    ISensitiveDataFilter sensitiveDataFilter,
+    IDeviceBlockService  deviceBlockService,
+    IAnomalyDetector     anomalyDetector)
 {
     public async Task<AssistantResponseDto> ExecuteAsync(
         AssistantQueryDto dto,
-        AccessClaim claim,
-        string ipAddress,
-        string correlationId)
+        AccessClaim       claim,
+        string            ipAddress,
+        string            correlationId)
     {
-        // 1. Valida a pergunta contra prompt injection
+        // 0. Verifica se dispositivo está bloqueado
+        if (await deviceBlockService.IsBlockedAsync(dto.DeviceId))
+        {
+            await auditService.LogAsync(SecurityAudit.Create(
+                action:        "QUERY_BLOCKED_DEVICE",
+                resource:      "assistant/query",
+                wasAllowed:    false,
+                ipAddress:     ipAddress,
+                deviceId:      dto.DeviceId,
+                correlationId: correlationId,
+                blockReason:   "Dispositivo bloqueado por anomalia detectada"
+            ));
+            throw new SecurityViolationException(
+                "DEVICE_BLOCKED",
+                "Este dispositivo foi bloqueado por atividade suspeita.");
+        }
+
+        // 1. Verifica anomalias com base no histórico
+        var allAudits = await auditService.GetAllAsync();
+        var anomaly   = await anomalyDetector.AnalyzeAsync(dto.DeviceId, allAudits);
+
+        if (anomaly.IsAnomaly)
+        {
+            await deviceBlockService.BlockAsync(dto.DeviceId, anomaly.Reason, anomaly.AnomalyScore);
+            await auditService.LogAsync(SecurityAudit.Create(
+                action:        "ANOMALY_DETECTED",
+                resource:      "assistant/query",
+                wasAllowed:    false,
+                ipAddress:     ipAddress,
+                deviceId:      dto.DeviceId,
+                correlationId: correlationId,
+                blockReason:   anomaly.Reason
+            ));
+            throw new SecurityViolationException(
+                "ANOMALY_DETECTED",
+                $"Comportamento anômalo detectado: {anomaly.Reason}");
+        }
+
+        // 2. Valida prompt injection
         var (isValid, error) = QueryValidator.Validate(dto.Question);
         if (!isValid)
         {
             await auditService.LogAsync(SecurityAudit.Create(
-                userId: claim.UserId,
-                action: "QUERY_BLOCKED_INJECTION",
-                resource: "assistant/query",
-                wasAllowed: false,
-                ipAddress: ipAddress,
-                deviceId: dto.DeviceId,
+                action:        "QUERY_INJECTION_ATTEMPT",
+                resource:      "assistant/query",
+                wasAllowed:    false,
+                ipAddress:     ipAddress,
+                deviceId:      dto.DeviceId,
                 correlationId: correlationId,
-                blockReason: error
+                blockReason:   error
             ));
-
-            throw new SecurityViolationException(
-                "PROMPT_INJECTION",
-                "Pergunta bloqueada por política de segurança."
-            );
+            throw new SecurityViolationException("PROMPT_INJECTION", error!);
         }
 
-        // 2. Verifica intenção de extração de dados sensíveis
-        bool hasExtractionIntent = QueryValidator.HasExtractionIntent(dto.Question);
-
-        // 3. Define nível máximo de acesso do usuário
-        var maxClassification = claim.Role switch
-        {
-            Domain.Enums.UserRole.Manager    => DocumentClassification.Confidential,
-            Domain.Enums.UserRole.Specialist => DocumentClassification.Restricted,
-            _                                => DocumentClassification.Internal
-        };
-
-        // 4. Busca documentos permitidos para o perfil
-        var documents = (await documentRepository.SearchAsync(
+        // 3. Busca documentos autorizados — usa MaxClassification do AccessClaim
+        var documents = await documentRepository.SearchAsync(
             dto.Question,
-            maxClassification
-        ))
-            .Where(d => d.Classification <= maxClassification)
-            .ToList();
+            claim.MaxClassification);
 
-        // 5. Gera resposta com IA usando apenas o contexto autorizado
-        var rawResponse = await aiService.GenerateResponseAsync(
-            dto.Question,
-            documents
-        );
-
-        // 6. Filtra a saída para remover dados sensíveis
-        var filteredResponse = sensitiveDataFilter.Filter(rawResponse);
-        bool wasFiltered = filteredResponse != rawResponse;
-
-        // 7. Se havia intenção de extração, retorna mensagem segura
-        if (hasExtractionIntent && wasFiltered)
+        if (!documents.Any())
         {
-            filteredResponse = "Acesso negado: a resposta contém informações restritas para seu perfil.";
+            await auditService.LogAsync(SecurityAudit.Create(
+                action:        "QUERY_NO_ACCESS",
+                resource:      "assistant/query",
+                wasAllowed:    false,
+                ipAddress:     ipAddress,
+                deviceId:      dto.DeviceId,
+                correlationId: correlationId,
+                blockReason:   "Nenhum documento autorizado encontrado"
+            ));
+            throw new UnauthorizedDomainAccessException(
+                "assistant/query",
+                "Nenhum documento autorizado para este perfil");
         }
 
-        // 8. Registra auditoria
+        // 4. Gera resposta com IA
+        var rawAnswer = await aiService.GenerateResponseAsync(dto.Question, documents);
+
+        // 5. Filtra dados sensíveis
+        var (filteredAnswer, wasFiltered) = sensitiveDataFilter.Filter(rawAnswer);
+
         await auditService.LogAsync(SecurityAudit.Create(
-            userId: claim.UserId,
-            action: wasFiltered ? "QUERY_FILTERED" : "QUERY_ALLOWED",
-            resource: "assistant/query",
-            wasAllowed: true,
-            ipAddress: ipAddress,
-            deviceId: dto.DeviceId,
+            action:        "QUERY_ASSISTANT",
+            resource:      "assistant/query",
+            wasAllowed:    true,
+            ipAddress:     ipAddress,
+            deviceId:      dto.DeviceId,
             correlationId: correlationId,
-            blockReason: wasFiltered ? "Dados sensíveis removidos da resposta" : null
+            blockReason:   wasFiltered ? "Dados sensíveis removidos da resposta" : null
         ));
 
         return new AssistantResponseDto(
-            Answer: filteredResponse,
+            Answer:      filteredAnswer,
             WasFiltered: wasFiltered,
             AccessLevel: claim.Role.ToString(),
             GeneratedAt: DateTime.UtcNow
