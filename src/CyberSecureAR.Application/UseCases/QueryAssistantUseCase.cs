@@ -19,7 +19,8 @@ public class QueryAssistantUseCase(
     public async Task<AssistantResponseDto> ExecuteAsync(
         AssistantQueryDto dto,
         AccessClaim claim,
-        string ipAddress)
+        string ipAddress,
+        string correlationId)
     {
         // 1. Valida a pergunta contra prompt injection
         var (isValid, error) = QueryValidator.Validate(dto.Question);
@@ -32,6 +33,7 @@ public class QueryAssistantUseCase(
                 wasAllowed: false,
                 ipAddress: ipAddress,
                 deviceId: dto.DeviceId,
+                correlationId: correlationId,
                 blockReason: error
             ));
 
@@ -84,6 +86,7 @@ public class QueryAssistantUseCase(
             wasAllowed: true,
             ipAddress: ipAddress,
             deviceId: dto.DeviceId,
+            correlationId: correlationId,
             blockReason: wasFiltered ? "Dados sensíveis removidos da resposta" : null
         ));
 

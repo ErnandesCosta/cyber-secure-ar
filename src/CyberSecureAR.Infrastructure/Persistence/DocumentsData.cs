@@ -15,6 +15,9 @@ public static class DocumentsData
                      "3. Funcionamento do mecanismo de alívio. " +
                      "Equipamentos necessários: manômetro calibrado, detector de gás.",
             category: "Operação",
+            domain: DocumentDomain.Operation,
+            criticality: DocumentCriticality.Medium,
+            operationalContext: "Manutenção de válvulas",
             classification: DocumentClassification.Internal
         ),
         Document.Create(
@@ -23,6 +26,9 @@ public static class DocumentsData
                      "óculos de proteção, luvas e botas de segurança. " +
                      "Em caso de emergência, acionar o ramal 190 da central de operações.",
             category: "Segurança",
+            domain: DocumentDomain.Safety,
+            criticality: DocumentCriticality.Low,
+            operationalContext: "Treinamento de campo",
             classification: DocumentClassification.Public
         ),
         Document.Create(
@@ -31,6 +37,9 @@ public static class DocumentsData
                      "Recomendação: substituição preventiva em até 30 dias. " +
                      "Custo estimado: R$ 48.000. Impacto operacional: mínimo.",
             category: "Manutenção",
+            domain: DocumentDomain.Maintenance,
+            criticality: DocumentCriticality.High,
+            operationalContext: "Manutenção preditiva",
             classification: DocumentClassification.Restricted
         ),
         Document.Create(
@@ -40,6 +49,9 @@ public static class DocumentsData
                      "Meta de produção: 2,2 milhões de barris/dia até 2028. " +
                      "Dados confidenciais — acesso restrito à diretoria.",
             category: "Estratégia",
+            domain: DocumentDomain.Strategy,
+            criticality: DocumentCriticality.Critical,
+            operationalContext: "Planejamento corporativo",
             classification: DocumentClassification.Confidential
         ),
         Document.Create(
@@ -49,6 +61,9 @@ public static class DocumentsData
                      "3. Registrar leituras de temperatura dos equipamentos. " +
                      "4. Reportar anomalias imediatamente ao supervisor.",
             category: "Operação",
+            domain: DocumentDomain.Operation,
+            criticality: DocumentCriticality.Medium,
+            operationalContext: "Operação diária",
             classification: DocumentClassification.Internal
         ),
         Document.Create(
@@ -57,6 +72,9 @@ public static class DocumentsData
                      "VPN corporativa: token rotativo via aplicativo. " +
                      "Banco de dados: host 10.0.0.1, porta 5432.",
             category: "TI",
+            domain: DocumentDomain.Technology,
+            criticality: DocumentCriticality.Critical,
+            operationalContext: "Acesso a TI",
             classification: DocumentClassification.Confidential
         )
     ];

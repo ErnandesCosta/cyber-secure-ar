@@ -79,6 +79,16 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = ctx =>
+                    {
+                        if (string.IsNullOrWhiteSpace(ctx.Token)
+                            && ctx.Request.Query.TryGetValue("access_token", out var tokenValues))
+                        {
+                            ctx.Token = tokenValues.FirstOrDefault();
+                        }
+
+                        return Task.CompletedTask;
+                    },
                     OnAuthenticationFailed = ctx =>
                     {
                         ctx.Response.Headers.Append("Token-Expired", "true");

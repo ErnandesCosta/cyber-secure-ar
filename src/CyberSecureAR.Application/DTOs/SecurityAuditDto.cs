@@ -9,5 +9,6 @@ public record SecurityAuditDto(
     string? BlockReason,
     string IpAddress,
     string DeviceId,
+    string CorrelationId,
     DateTime OccurredAt
 );

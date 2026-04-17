@@ -1,3 +1,4 @@
+using System.Linq;
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Domain.Entities;
 
@@ -7,10 +8,14 @@ public class AuditMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, IAuditService auditService)
     {
-        var path     = context.Request.Path.ToString();
-        var method   = context.Request.Method;
-        var ip       = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var deviceId = context.Request.Headers["X-Device-Id"].FirstOrDefault() ?? "unknown";
+        var path          = context.Request.Path.ToString();
+        var method        = context.Request.Method;
+        var ip            = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var deviceId      = context.Request.Headers["X-Device-Id"].FirstOrDefault() ?? "unknown";
+        var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                            ?? context.TraceIdentifier;
+
+        context.Response.Headers["X-Correlation-Id"] = correlationId;
 
         await next(context);
 
@@ -32,6 +37,7 @@ public class AuditMiddleware(RequestDelegate next)
                 wasAllowed:  allowed,
                 ipAddress:   ip,
                 deviceId:    deviceId,
+                correlationId: correlationId,
                 blockReason: allowed ? null : $"HTTP {statusCode}"
             ));
         }

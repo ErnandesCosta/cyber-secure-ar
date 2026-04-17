@@ -34,21 +34,27 @@ public class InMemoryDocumentRepository : IDocumentRepository
         var matched = authorized
             .Where(d =>
             {
-                var titleLower   = d.Title.ToLowerInvariant();
-                var contentLower = d.Content.ToLowerInvariant();
-                var catLower     = d.Category.ToLowerInvariant();
+                var titleLower      = d.Title.ToLowerInvariant();
+                var contentLower    = d.Content.ToLowerInvariant();
+                var catLower        = d.Category.ToLowerInvariant();
+                var domainLower     = d.Domain.ToString().ToLowerInvariant();
+                var contextLower    = d.OperationalContext.ToLowerInvariant();
 
                 // Match exato na query completa
                 if (titleLower.Contains(lower) ||
                     contentLower.Contains(lower) ||
-                    catLower.Contains(lower))
+                    catLower.Contains(lower) ||
+                    domainLower.Contains(lower) ||
+                    contextLower.Contains(lower))
                     return true;
 
                 // Match por palavras individuais
                 return words.Any(w =>
                     titleLower.Contains(w) ||
                     contentLower.Contains(w) ||
-                    catLower.Contains(w));
+                    catLower.Contains(w) ||
+                    domainLower.Contains(w) ||
+                    contextLower.Contains(w));
             })
             .ToList();
 

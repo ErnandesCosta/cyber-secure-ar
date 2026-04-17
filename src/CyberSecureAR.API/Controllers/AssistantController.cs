@@ -55,8 +55,10 @@ public class AssistantController(
             }
 
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var correlationId = HttpContext.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                                ?? HttpContext.TraceIdentifier;
             var secureDto = dto with { DeviceId = headerDeviceId };
-            var response = await queryAssistantUseCase.ExecuteAsync(secureDto, claim, ip);
+            var response = await queryAssistantUseCase.ExecuteAsync(secureDto, claim, ip, correlationId);
 
             return Ok(response);
         }

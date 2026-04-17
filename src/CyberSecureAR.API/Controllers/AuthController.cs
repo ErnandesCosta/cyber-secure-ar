@@ -4,6 +4,7 @@ using CyberSecureAR.API.Models;
 using CyberSecureAR.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Security.Claims;
 
 namespace CyberSecureAR.API.Controllers;
@@ -22,7 +23,8 @@ public class AuthController(AuthenticateUserUseCase authenticateUserUseCase) : C
         try
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var response = await authenticateUserUseCase.ExecuteAsync(request, ip);
+            var correlationId = HttpContext.Request.Headers["X-Correlation-Id"].FirstOrDefault() ?? HttpContext.TraceIdentifier;
+            var response = await authenticateUserUseCase.ExecuteAsync(request, ip, correlationId);
             return Ok(response);
         }
         catch (ArgumentException ex)

@@ -7,17 +7,24 @@ namespace CyberSecureAR.Infrastructure.Logging;
 public class AuditService(ILogger<AuditService> logger) : IAuditService
 {
     private readonly List<SecurityAudit> _audits = [];
+    private readonly object _lock = new();
+
+    public event Action<SecurityAudit>? AuditLogged;
 
     public Task LogAsync(SecurityAudit audit)
     {
-        _audits.Add(audit);
+        lock (_lock)
+        {
+            _audits.Add(audit);
+        }
 
         // Loga de forma estruturada para observabilidade
         if (audit.WasAllowed)
         {
             logger.LogInformation(
-                "[AUDIT] Action={Action} Resource={Resource} UserId={UserId} " +
+                "[AUDIT] CorrelationId={CorrelationId} Action={Action} Resource={Resource} UserId={UserId} " +
                 "Device={DeviceId} IP={IpAddress} Allowed={Allowed}",
+                audit.CorrelationId,
                 audit.Action,
                 audit.Resource,
                 audit.UserId,
@@ -29,8 +36,9 @@ public class AuditService(ILogger<AuditService> logger) : IAuditService
         else
         {
             logger.LogWarning(
-                "[AUDIT] Action={Action} Resource={Resource} UserId={UserId} " +
+                "[AUDIT] CorrelationId={CorrelationId} Action={Action} Resource={Resource} UserId={UserId} " +
                 "Device={DeviceId} IP={IpAddress} Allowed={Allowed} Reason={Reason}",
+                audit.CorrelationId,
                 audit.Action,
                 audit.Resource,
                 audit.UserId,
@@ -41,18 +49,28 @@ public class AuditService(ILogger<AuditService> logger) : IAuditService
             );
         }
 
+        AuditLogged?.Invoke(audit);
+
         return Task.CompletedTask;
     }
 
     public Task<IEnumerable<SecurityAudit>> GetByUserIdAsync(Guid userId)
     {
-        var result = _audits.Where(a => a.UserId == userId);
+        IEnumerable<SecurityAudit> result;
+        lock (_lock)
+        {
+            result = _audits.Where(a => a.UserId == userId).ToList();
+        }
         return Task.FromResult(result);
     }
 
     public Task<IEnumerable<SecurityAudit>> GetAllAsync()
     {
-        var result = _audits.AsEnumerable();
+        IEnumerable<SecurityAudit> result;
+        lock (_lock)
+        {
+            result = _audits.ToList();
+        }
         return Task.FromResult(result);
     }
 }

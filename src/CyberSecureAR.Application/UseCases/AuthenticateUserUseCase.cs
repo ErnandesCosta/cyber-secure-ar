@@ -14,7 +14,8 @@ public class AuthenticateUserUseCase(
 {
     public async Task<LoginResponse> ExecuteAsync(
         LoginRequest request,
-        string ipAddress)
+        string ipAddress,
+        string correlationId)
     {
         // Valida o request
         var (isValid, error) = LoginRequestValidator.Validate(request);
@@ -34,6 +35,7 @@ public class AuthenticateUserUseCase(
                 wasAllowed: false,
                 ipAddress: ipAddress,
                 deviceId: request.DeviceId,
+                correlationId: correlationId,
                 blockReason: "Credenciais inválidas"
             ));
 
@@ -60,7 +62,8 @@ public class AuthenticateUserUseCase(
             resource: "auth/login",
             wasAllowed: true,
             ipAddress: ipAddress,
-            deviceId: request.DeviceId
+            deviceId: request.DeviceId,
+            correlationId: correlationId
         ));
 
         return new LoginResponse(
