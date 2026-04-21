@@ -4,6 +4,10 @@ export interface LoginRequest {
   deviceId: string;
 }
 
+export interface PasskeyLoginRequest {
+  username: string;
+}
+
 export interface LoginResponse {
   token: string;
   fullName: string;

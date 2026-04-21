@@ -1,12 +1,21 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthProvider";
+import { LoadingSpinner } from "./components/LoadingSpinner";
 import { useAuth } from "./hooks/useAuth";
-import { LoginPage } from "./pages/LoginPage";
-import { AssistantPage } from "./pages/AssistantPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { AdminMonitoringPage } from "./pages/AdminMonitoringPage";
-import { DashboardPage } from "./components/DashboardPage";
 import "./App.css";
+
+const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })));
+const AssistantPage = lazy(() =>
+  import("./pages/AssistantPage").then((module) => ({ default: module.AssistantPage })),
+);
+const ProfilePage = lazy(() => import("./pages/ProfilePage").then((module) => ({ default: module.ProfilePage })));
+const AdminMonitoringPage = lazy(() =>
+  import("./pages/AdminMonitoringPage").then((module) => ({ default: module.AdminMonitoringPage })),
+);
+const DashboardPage = lazy(() =>
+  import("./components/DashboardPage").then((module) => ({ default: module.DashboardPage })),
+);
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -78,7 +87,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Suspense fallback={<LoadingSpinner message="Carregando interface..." />}>
+          <AppRoutes />
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

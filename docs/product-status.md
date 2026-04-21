@@ -1,60 +1,54 @@
 # Product Status
 
-## O que o projeto é hoje
+## O que o projeto e hoje
 
-O **CyberSecure AR** é uma plataforma de cibersegurança operacional para uso em campo com smart glasses, assistente de IA com escopo controlado, auditoria contínua e monitoramento SOC por perfil.
+O **CyberSecure AR** e uma plataforma de ciberseguranca operacional para uso em campo com smart glasses, assistente de IA com escopo controlado, auditoria continua, passkeys e monitoramento SOC por perfil.
 
-Ele atende bem como **prova de conceito forte / MVP técnico de hackathon**, porque já demonstra:
+Hoje ele funciona bem como **MVP tecnico forte / prova de conceito avancada**.
 
-- autenticação com JWT e `deviceId`
-- RBAC por perfis (`Technician`, `Specialist`, `Manager`)
-- assistente com filtragem e trilha de auditoria
-- dashboard SOC com resumo, incidentes, tendências e bloqueios
-- área administrativa dedicada para monitoramento gerencial
-
-## O que já está implementado
+## O que ja esta implementado
 
 ### Frontend
 
-- tela de login modernizada
-- fluxo visual de segundo fator biométrico
-- assistente operacional com sugestões e retorno seguro
-- dashboard SOC com risco, alertas, incidentes e exportação PDF
-- página de perfil com postura de acesso e recomendações
-- rota administrativa `/admin` exclusiva para `Manager`
+- login modernizado com credencial tradicional
+- login com passkey/WebAuthn
+- cadastro e remocao de passkeys na pagina de perfil
+- assistente operacional com resposta auditavel
+- dashboard SOC com risco, tendencias, incidentes e exportacao
+- area administrativa dedicada para gestores
 
 ### Backend
 
-- autenticação e emissão de token
-- endpoints de resumo, tendências, eventos e incidentes
+- autenticacao com JWT
+- endpoints de registro e autenticacao com passkeys via FIDO2/WebAuthn
+- controle de acesso por papel
+- auditoria, incidentes, tendencias e anomalias
 - bloqueio e desbloqueio de dispositivos
-- middlewares de segurança e auditoria
-- políticas de autorização por papel
 
-## O que ainda é demo ou parcial
+## O que ainda e parcial
 
-- biometria no frontend está preparada como experiência e detecção de suporte local, mas **não conclui um registro/autenticação WebAuthn ponta a ponta**
-- persistência ainda está baseada em estrutura simplificada / mock em partes do projeto
-- monitoramento ainda é orientado a eventos da própria aplicação, não a telemetria OT real
+- a persistencia ainda e simplificada e baseada em armazenamento em memoria em partes da aplicacao
+- o monitoramento ainda observa principalmente eventos da propria plataforma, nao telemetria OT real
+- o fluxo biometrico visual do login continua como experiencia guiada; o endurecimento real esta no login por passkey
+- a pasta `tests/` ainda nao representa uma suite valida: o `.csproj` e os arquivos de teste estao vazios
 
-## Próximos passos para virar produto forte
+## Proximos passos recomendados
 
-1. Implementar WebAuthn real no backend.
-2. Persistir credenciais, dispositivos confiáveis e eventos em banco relacional.
-3. Criar inventário de ativos e vincular `deviceId` a attestation / confiança do ativo.
-4. Adicionar step-up auth por risco.
-5. Integrar fontes OT/IT reais para o SOC.
-6. Criar playbooks operacionais e fila de investigação com workflow.
-7. Adicionar testes E2E do frontend e testes de autorização por papel.
+1. Persistir credenciais, eventos e dispositivos em banco relacional.
+2. Vincular `deviceId` a inventario confiavel e attestation do ativo.
+3. Adicionar step-up auth por risco apos o login.
+4. Integrar telemetria OT/IT real ao SOC.
+5. Criar workflow de triagem e playbooks de resposta.
+6. Implementar uma base real de testes automatizados.
 
-## Avaliação objetiva
+## Avaliacao objetiva
 
-Como proposta, o projeto é **muito bom** e está alinhado com um cenário real de indústria crítica porque combina:
+Como proposta, o projeto e forte porque combina:
 
 - identidade
 - contexto de dispositivo
 - controle de acesso
-- observabilidade de segurança
-- IA com restrição de escopo
+- observabilidade de seguranca
+- IA com restricao de escopo
 
-O diferencial está em não tratar IA isoladamente, mas como parte de uma arquitetura de acesso seguro para operação crítica.
+O diferencial esta em tratar IA como parte de uma arquitetura de acesso seguro para operacao critica, e nao como um chat isolado.

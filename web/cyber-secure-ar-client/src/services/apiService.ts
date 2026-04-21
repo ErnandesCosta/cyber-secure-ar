@@ -1,4 +1,4 @@
-﻿import { tokenStorage } from "../utils/tokenStorage";
+import { tokenStorage } from "../utils/tokenStorage";
 import type { LoginRequest, LoginResponse, UserProfile } from "../types/auth";
 import type { AssistantQueryDto, AssistantResponseDto } from "../types/query";
 import type { ApiErrorResponse } from "../types/api";
@@ -9,6 +9,14 @@ import type {
   SecurityAuditDto,
 } from "../types/audit";
 import type { AnomalyResultDto, BlockedDeviceDto } from "../types/security";
+import type {
+  BeginPasskeyRegistrationRequest,
+  PasskeyAuthenticationOptions,
+  PasskeyCredentialDto,
+  PasskeyRegistrationOptions,
+  PasskeyRegistrationResponse,
+  VerifyPasskeyAuthenticationRequest,
+} from "../types/passkey";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
@@ -55,6 +63,61 @@ export const apiService = {
   getMe: async (): Promise<UserProfile> => {
     const res = await fetch(`${BASE_URL}/api/auth/me`, { headers: getHeaders() });
     return handleResponse<UserProfile>(res);
+  },
+
+  getPasskeys: async (): Promise<PasskeyCredentialDto[]> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys`, { headers: getHeaders() });
+    return handleResponse<PasskeyCredentialDto[]>(res);
+  },
+
+  beginPasskeyRegistration: async (
+    data: BeginPasskeyRegistrationRequest,
+  ): Promise<PasskeyRegistrationOptions> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys/registration/options`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<PasskeyRegistrationOptions>(res);
+  },
+
+  finishPasskeyRegistration: async (
+    data: PasskeyRegistrationResponse,
+  ): Promise<PasskeyCredentialDto> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys/registration/verify`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<PasskeyCredentialDto>(res);
+  },
+
+  beginPasskeyAuthentication: async (username: string): Promise<PasskeyAuthenticationOptions> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys/authentication/options`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ username }),
+    });
+    return handleResponse<PasskeyAuthenticationOptions>(res);
+  },
+
+  verifyPasskeyAuthentication: async (
+    data: VerifyPasskeyAuthenticationRequest,
+  ): Promise<LoginResponse> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys/authentication/verify`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<LoginResponse>(res);
+  },
+
+  deletePasskey: async (credentialId: string): Promise<void> => {
+    const res = await fetch(`${BASE_URL}/api/passkeys/${credentialId}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    await handleResponse<void>(res);
   },
 
   query: async (data: AssistantQueryDto): Promise<AssistantResponseDto> => {

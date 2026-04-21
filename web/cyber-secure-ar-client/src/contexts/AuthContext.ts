@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { LoginRequest, UserProfile } from "../types/auth";
+import type { LoginRequest, PasskeyLoginRequest, UserProfile } from "../types/auth";
 
 export interface AuthContextData {
   user: UserProfile | null;
@@ -7,6 +7,7 @@ export interface AuthContextData {
   isLoading: boolean;
   error: string | null;
   login: (data: LoginRequest) => Promise<void>;
+  loginWithPasskey: (data: PasskeyLoginRequest) => Promise<void>;
   logout: () => void;
 }
 

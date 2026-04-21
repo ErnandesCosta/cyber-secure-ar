@@ -2,11 +2,14 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using CyberSecureAR.Application.Interfaces;
 using CyberSecureAR.Application.UseCases;
+using CyberSecureAR.API.Models;
+using CyberSecureAR.API.Services;
 using CyberSecureAR.Infrastructure.AI;
 using CyberSecureAR.Infrastructure.Auth;
 using CyberSecureAR.Infrastructure.Logging;
 using CyberSecureAR.Infrastructure.Persistence;
 using CyberSecureAR.Infrastructure.Security;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -21,15 +24,32 @@ public static class ServiceCollectionExtensions
         services.Configure<TokenConfiguration>(
             configuration.GetSection("TokenConfiguration")
         );
+        services.Configure<PasskeyOptions>(
+            configuration.GetSection("Passkeys")
+        );
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+        services.AddSingleton<IPasskeyRepository, InMemoryPasskeyRepository>();
         services.AddSingleton<IDocumentRepository, InMemoryDocumentRepository>();
         services.AddScoped<IAIService, MockAiService>();
         services.AddScoped<ISensitiveDataFilter, SensitiveDataFilter>();
         services.AddSingleton<IAuditService, AuditService>();
         services.AddSingleton<IDeviceBlockService, DeviceBlockService>();
         services.AddSingleton<IAnomalyDetector, AnomalyDetector>();
+        services.AddSingleton<PasskeyOperationStore>();
+        services.AddSingleton(sp =>
+        {
+            var options = configuration.GetSection("Passkeys").Get<PasskeyOptions>()
+                ?? new PasskeyOptions();
+
+            return new Fido2(new Fido2Configuration
+            {
+                ServerDomain = options.ServerDomain,
+                ServerName = options.ServerName,
+                Origins = new HashSet<string>(options.Origins)
+            });
+        });
 
         return services;
     }

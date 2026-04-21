@@ -1,5 +1,6 @@
-﻿import { useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
+  ArrowRightCircleIcon,
   CpuChipIcon,
   ExclamationTriangleIcon,
   FingerPrintIcon,
@@ -32,12 +33,13 @@ const trustHighlights = [
 ];
 
 export function LoginForm() {
-  const { login } = useAuth();
+  const { login, loginWithPasskey } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -64,6 +66,26 @@ export function LoginForm() {
       setError(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasskeyLogin = async () => {
+    setError(null);
+
+    if (!username.trim()) {
+      setError("Informe o usuário para autenticar com passkey.");
+      return;
+    }
+
+    setPasskeyLoading(true);
+    try {
+      await loginWithPasskey({ username: username.trim() });
+      navigate("/assistant");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Falha ao autenticar com passkey.";
+      setError(message);
+    } finally {
+      setPasskeyLoading(false);
     }
   };
 
@@ -129,8 +151,8 @@ export function LoginForm() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="tecnico.joao"
-                  autoComplete="username"
-                  disabled={loading || showBiometric}
+                  autoComplete="username webauthn"
+                  disabled={loading || passkeyLoading || showBiometric}
                 />
               </div>
 
@@ -143,7 +165,7 @@ export function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
                   autoComplete="current-password"
-                  disabled={loading || showBiometric}
+                  disabled={loading || passkeyLoading || showBiometric}
                 />
               </div>
 
@@ -154,8 +176,22 @@ export function LoginForm() {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary" disabled={loading || showBiometric}>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading || passkeyLoading || showBiometric}
+              >
                 {loading ? "Autenticando..." : "Entrar na plataforma"}
+              </button>
+
+              <button
+                type="button"
+                className="ghost-button passkey-button"
+                onClick={handlePasskeyLogin}
+                disabled={loading || passkeyLoading || showBiometric}
+              >
+                <ArrowRightCircleIcon />
+                {passkeyLoading ? "Validando passkey..." : "Entrar com passkey"}
               </button>
             </form>
 
