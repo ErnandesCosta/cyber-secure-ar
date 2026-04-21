@@ -10,12 +10,14 @@ namespace CyberSecureAR.API.Controllers;
 [Authorize]
 public class SecurityController(
     IDeviceBlockService deviceBlockService,
-    IAuditService       auditService,
-    IAnomalyDetector    anomalyDetector) : ControllerBase
+    IAuditService      auditService,
+    IAnomalyDetector   anomalyDetector) : ControllerBase
 {
     // GET api/security/blocked-devices
     [HttpGet("blocked-devices")]
+    [Authorize(Roles = "Manager")]
     [ProducesResponseType(typeof(IEnumerable<BlockedDeviceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetBlockedDevices()
     {
         var devices = await deviceBlockService.GetAllBlockedAsync();
@@ -26,7 +28,9 @@ public class SecurityController(
 
     // DELETE api/security/blocked-devices/{deviceId}
     [HttpDelete("blocked-devices/{deviceId}")]
+    [Authorize(Roles = "Manager")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> UnblockDevice(string deviceId)
     {
         await deviceBlockService.UnblockAsync(deviceId);

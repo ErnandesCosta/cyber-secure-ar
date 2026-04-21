@@ -8,6 +8,31 @@ import { ShieldCheckIcon, ArrowRightOnRectangleIcon, ChartBarIcon } from "@heroi
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { SecurityPanel } from "./SecurityPanel";
 
+const exportPDF = async () => {
+  try {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: html2canvas } = await import('html2canvas');
+    const element = document.querySelector('.dashboard-content') as HTMLElement;
+    if (!element) return;
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#0d0d1a',
+      scale: 1,
+      useCORS: true,
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'landscape', format: 'a4' });
+    const date = new Date().toISOString().split('T')[0];
+    pdf.setFontSize(14);
+    pdf.text('CyberSecure AR - Relatório SOC', 14, 12);
+    pdf.setFontSize(9);
+    pdf.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 18);
+    pdf.addImage(imgData, 'PNG', 10, 24, 277, 170);
+    pdf.save(`SOC-Report-${date}.pdf`);
+  } catch {
+    alert('Erro ao gerar PDF. Verifique se jspdf e html2canvas estão instalados.');
+  }
+};
+
 export const DashboardPage = () => {
   const { logout } = useAuth();
   const { events, isLoading: eventsLoading } = useAuditEvents();
@@ -31,21 +56,16 @@ export const DashboardPage = () => {
           <div className="app-subtitle">SOC Dashboard</div>
         </div>
         <nav className="dashboard-nav">
-          <NavLink to="/assistant" className="nav-item">
-            💬 Assistente
-          </NavLink>
-          <NavLink to="/dashboard" className="nav-item">
-            📊 Dashboard
-          </NavLink>
-          <button className="nav-item logout-button" onClick={logout}>
-            <ArrowRightOnRectangleIcon className="icon" />
-            Sair
+          <NavLink to="/assistant" className="nav-item">Assistente</NavLink>
+          <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>
+          <NavLink to="/profile" className="nav-item">Perfil</NavLink>
+          <button className="nav-item btn-export-pdf" onClick={exportPDF} title="Exportar relatório PDF">
+            📄 Exportar PDF
           </button>
+          <button className="nav-item logout-button" onClick={logout}>Sair</button>
         </nav>
       </header>
-
       <main className="dashboard-content">
-
         {/* ── CARDS RESUMO ── */}
         <section className="dashboard-panel">
           <div className="panel-header-row">
@@ -111,9 +131,111 @@ export const DashboardPage = () => {
           )}
         </section>
 
+<<<<<<< HEAD
         {/* ── PAINEL DE SEGURANCA ── */}
         <SecurityPanel />
 
+=======
+        {/* ── INCIDENTES ATIVOS ── */}
+        <section className="dashboard-panel">
+          <h2>Incidentes ativos</h2>
+          <p className="panel-subtitle">Grupos de eventos correlacionados por sessão.</p>
+          {incidentsLoading ? (
+            <p>Carregando incidentes...</p>
+          ) : incidentsError ? (
+            <p className="error-text">Erro: {incidentsError}</p>
+          ) : incidents.length === 0 ? (
+            <p>Nenhum incidente ativo.</p>
+          ) : (
+            <ul className="audit-list">
+              {incidents.map((inc, index) => (
+                <li key={index}>
+                  <div className="alert-row">
+                    <span className="alert-action">{inc.resource}</span>
+                    <span className={`event-badge ${inc.severity >= 70 ? "blocked" : "warning"}`}>
+                      Severidade {inc.severity}
+                    </span>
+                  </div>
+                  <div className="alert-meta">
+                    <span>Device: {inc.deviceId}</span>
+                    <span>{inc.blockedEvents}/{inc.totalEvents} bloqueados</span>
+                    <span>
+                      {new Date(inc.lastOccurredAt).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* ── PRINCIPAIS AÇÕES (só Manager) ── */}
+        {isManager && (
+          <section className="dashboard-panel">
+            <h2>Principais ações</h2>
+            {summaryLoading ? (
+              <p>Carregando métricas...</p>
+            ) : (
+              <ul className="metric-list">
+                {topActions.length ? (
+                  topActions.slice(0, 5).map((m, index) => (
+                    <li key={index}>
+                      <strong>{m.action}</strong>: {m.count}
+                    </li>
+                  ))
+                ) : (
+                  <li>Nenhuma ação registrada ainda.</li>
+                )}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {/* ── ALERTAS RECENTES ── */}
+        <section className="dashboard-panel">
+          <div className="panel-header-row">
+            <div>
+              <h2>Alertas recentes</h2>
+              <p className="panel-subtitle">Eventos bloqueados pela política de segurança.</p>
+            </div>
+            <span className="refresh-note">Atualizando a cada 10s</span>
+          </div>
+          {eventsLoading ? (
+            <p>Carregando alertas...</p>
+          ) : eventsError ? (
+            <p className="error-text">Erro ao carregar alertas: {eventsError}</p>
+          ) : recentAlerts.length ? (
+            <ul className="audit-list compact-alert-list">
+              {recentAlerts.slice(0, 5).map((event, index) => (
+                <li key={index}>
+                  <div className="alert-row">
+                    <span className="alert-action">{event.action}</span>
+                    <span className="event-badge blocked">Bloqueado</span>
+                  </div>
+                  <div className="alert-meta">
+                    <span>
+                      {new Date(event.occurredAt).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <span>{event.blockReason ?? "Ação suspeita"}</span>
+                    <span className="correlation-tag">#{event.correlationId?.slice(0, 8)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Nenhum alerta crítico identificado recentemente.</p>
+          )}
+        </section>
+
+        {/* ── DISPOSITIVOS BLOQUEADOS (só Manager) ── */}
+        {isManager && <SecurityPanel />}
+>>>>>>> a6b21ae11010fca0cc7368aa288ace0f547aba32
       </main>
     </div>
   );
