@@ -1,4 +1,5 @@
 import { useBlockedDevices } from "../hooks/useBlockedDevices";
+import { AlertCircle, Lock, Unlock } from "lucide-react";
 
 export const SecurityPanel = () => {
   const { devices, isLoading, error, unblock } = useBlockedDevices();
@@ -7,7 +8,7 @@ export const SecurityPanel = () => {
     <section className="dashboard-panel">
       <div className="panel-header-row">
         <div>
-          <h2>Dispositivos bloqueados</h2>
+          <h2><Lock size={24} style={{ display: 'inline-block', marginRight: '0.5rem' }} />Dispositivos bloqueados</h2>
           <p className="panel-subtitle">
             Dispositivos bloqueados automaticamente por anomalia.
           </p>
@@ -18,15 +19,15 @@ export const SecurityPanel = () => {
       {isLoading ? (
         <p>Carregando...</p>
       ) : error ? (
-        <p className="error-text">Erro: {error}</p>
+        <p className="error-text"><AlertCircle size={18} />Erro: {error}</p>
       ) : devices.length === 0 ? (
         <p>Nenhum dispositivo bloqueado.</p>
       ) : (
         <ul className="audit-list">
           {devices.map((d) => (
-            <li key={d.deviceId}> {/* Correção: Substituído o '>' solto por <li> com a key */}
+            <li key={d.deviceId}>
               <div className="alert-row">
-                <span className="alert-action">{d.deviceId}</span>
+                <span className="alert-action"><Lock size={18} />{d.deviceId}</span>
                 <span className="event-badge blocked">Bloqueado</span>
               </div>
               <div className="alert-meta">
@@ -43,6 +44,7 @@ export const SecurityPanel = () => {
                 className="btn-unblock"
                 onClick={() => unblock(d.deviceId)}
               >
+                <Unlock size={16} style={{ display: 'inline-block', marginRight: '0.5rem' }} />
                 Desbloquear
               </button>
             </li>

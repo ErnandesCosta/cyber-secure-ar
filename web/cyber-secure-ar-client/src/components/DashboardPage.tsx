@@ -1,20 +1,20 @@
-import { NavLink } from "react-router-dom";
+﻿import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useAuditEvents } from "../hooks/useAuditEvents";
 import { useAuditSummary } from "../hooks/useAuditSummary";
 import { useAuditTrends } from "../hooks/useAuditTrends";
 import { useAuditIncidents } from "../hooks/useAuditIncidents";
+import { ShieldCheckIcon, ArrowRightOnRectangleIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { SecurityPanel } from "./SecurityPanel";
 
 export const DashboardPage = () => {
-  const { user, logout } = useAuth();
-  const { events, isLoading: eventsLoading, error: eventsError } = useAuditEvents();
-  const { summary, isLoading: summaryLoading, error: summaryError } = useAuditSummary();
+  const { logout } = useAuth();
+  const { events, isLoading: eventsLoading } = useAuditEvents();
+  const { summary, isLoading: summaryLoading } = useAuditSummary();
   const { trends, isLoading: trendsLoading } = useAuditTrends();
-  const { incidents, isLoading: incidentsLoading, error: incidentsError } = useAuditIncidents();
+  const { incidents, isLoading: incidentsLoading } = useAuditIncidents();
 
-  const isManager = user?.role === "Manager";
-  const topActions = summary?.topActions ?? [];
   const recentAlerts = events?.filter((e) => !e.wasAllowed) ?? [];
   const alertCount = recentAlerts.length;
   const riskScore = summary?.riskScore ?? 0;
@@ -24,13 +24,23 @@ export const DashboardPage = () => {
     <div className="app-container">
       <header className="app-header">
         <div>
-          <div className="app-logo">CyberSecure AR</div>
+          <div className="app-logo">
+            <ShieldCheckIcon className="icon" />
+            CyberSecure AR
+          </div>
           <div className="app-subtitle">SOC Dashboard</div>
         </div>
         <nav className="dashboard-nav">
-          <NavLink to="/assistant" className="nav-item">Assistente</NavLink>
-          <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>
-          <button className="nav-item logout-button" onClick={logout}>Sair</button>
+          <NavLink to="/assistant" className="nav-item">
+            💬 Assistente
+          </NavLink>
+          <NavLink to="/dashboard" className="nav-item">
+            📊 Dashboard
+          </NavLink>
+          <button className="nav-item logout-button" onClick={logout}>
+            <ArrowRightOnRectangleIcon className="icon" />
+            Sair
+          </button>
         </nav>
       </header>
 
@@ -40,10 +50,10 @@ export const DashboardPage = () => {
         <section className="dashboard-panel">
           <div className="panel-header-row">
             <div>
-              <h2>Visão geral de segurança</h2>
-              <p className="panel-subtitle">Métricas atualizadas automaticamente.</p>
+              <h2>Visao geral de seguranca</h2>
+              <p className="panel-subtitle">Metricas atualizadas em tempo real.</p>
             </div>
-            <span className="live-badge">Tempo real</span>
+            <span className="live-badge">🔴 Tempo real</span>
           </div>
           <div className="dashboard-card-grid">
             <div className={`dashboard-card compact-card risk-${riskColor}`}>
@@ -59,7 +69,7 @@ export const DashboardPage = () => {
             <div className="dashboard-card compact-card">
               <h3>Alertas ativos</h3>
               <p className="card-value">{eventsLoading ? "..." : alertCount}</p>
-              <p className="card-note">Requerem atenção</p>
+              <p className="card-note">Requerem atencao</p>
             </div>
             <div className="dashboard-card compact-card">
               <h3>Incidentes</h3>
@@ -67,128 +77,41 @@ export const DashboardPage = () => {
               <p className="card-note">Grupos de eventos</p>
             </div>
           </div>
-          {summaryError && <p className="error-text">Erro: {summaryError}</p>}
         </section>
 
-        {/* ── TENDÊNCIA DE RISCO ── */}
+        {/* ── TENDENCIA DE RISCO ── */}
         <section className="dashboard-panel">
-          <h2>Tendência de risco (últimos 50 min)</h2>
+          <h2><ChartBarIcon className="icon" />Tendencia de risco (ultimos 50 min)</h2>
           {trendsLoading ? (
-            <p>Carregando tendências...</p>
+            <p>Carregando tendencias...</p>
           ) : (
-            <div className="trend-chart">
-              {trends.map((t, index) => (
-                <div key={index} className="trend-bar-wrapper">
-                  <div
-                    className={`trend-bar ${t.riskScore >= 70 ? "danger" : t.riskScore >= 40 ? "warning" : "safe"}`}
-                    style={{ height: `${Math.max(t.riskScore, 4)}%` }}
-                    title={`${t.label}: ${t.riskScore}`}
+            <div className="trend-chart-container">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="label" stroke="var(--color-text-secondary)" />
+                  <YAxis stroke="var(--color-text-secondary)" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-bg-secondary)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "10px",
+                    }}
                   />
-                  <span className="trend-label">{t.label}</span>
-                </div>
-              ))}
+                  <Line
+                    type="monotone"
+                    dataKey="riskScore"
+                    stroke="var(--color-primary)"
+                    strokeWidth={3}
+                    dot={{ fill: "var(--color-primary)", strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           )}
         </section>
 
-        {/* ── INCIDENTES ATIVOS ── */}
-        <section className="dashboard-panel">
-          <h2>Incidentes ativos</h2>
-          <p className="panel-subtitle">Grupos de eventos correlacionados por sessão.</p>
-          {incidentsLoading ? (
-            <p>Carregando incidentes...</p>
-          ) : incidentsError ? (
-            <p className="error-text">Erro: {incidentsError}</p>
-          ) : incidents.length === 0 ? (
-            <p>Nenhum incidente ativo.</p>
-          ) : (
-            <ul className="audit-list">
-              {incidents.map((inc, index) => (
-                <li key={index}>
-                  <div className="alert-row">
-                    <span className="alert-action">{inc.resource}</span>
-                    <span className={`event-badge ${inc.severity >= 70 ? "blocked" : "warning"}`}>
-                      Severidade {inc.severity}
-                    </span>
-                  </div>
-                  <div className="alert-meta">
-                    <span>Device: {inc.deviceId}</span>
-                    <span>{inc.blockedEvents}/{inc.totalEvents} bloqueados</span>
-                    <span>
-                      {new Date(inc.lastOccurredAt).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* ── PRINCIPAIS AÇÕES (só Manager) ── */}
-        {isManager && (
-          <section className="dashboard-panel">
-            <h2>Principais ações</h2>
-            {summaryLoading ? (
-              <p>Carregando métricas...</p>
-            ) : (
-              <ul className="metric-list">
-                {topActions.length ? (
-                  topActions.slice(0, 5).map((m, index) => (
-                    <li key={index}>
-                      <strong>{m.action}</strong>: {m.count}
-                    </li>
-                  ))
-                ) : (
-                  <li>Nenhuma ação registrada ainda.</li>
-                )}
-              </ul>
-            )}
-          </section>
-        )}
-
-        {/* ── ALERTAS RECENTES ── */}
-        <section className="dashboard-panel">
-          <div className="panel-header-row">
-            <div>
-              <h2>Alertas recentes</h2>
-              <p className="panel-subtitle">Eventos bloqueados pela política de segurança.</p>
-            </div>
-            <span className="refresh-note">Atualizando a cada 10s</span>
-          </div>
-          {eventsLoading ? (
-            <p>Carregando alertas...</p>
-          ) : eventsError ? (
-            <p className="error-text">Erro ao carregar alertas: {eventsError}</p>
-          ) : recentAlerts.length ? (
-            <ul className="audit-list compact-alert-list">
-              {recentAlerts.slice(0, 5).map((event, index) => (
-                <li key={index}>
-                  <div className="alert-row">
-                    <span className="alert-action">{event.action}</span>
-                    <span className="event-badge blocked">Bloqueado</span>
-                  </div>
-                  <div className="alert-meta">
-                    <span>
-                      {new Date(event.occurredAt).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <span>{event.blockReason ?? "Ação suspeita"}</span>
-                    <span className="correlation-tag">#{event.correlationId?.slice(0, 8)}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Nenhum alerta crítico identificado recentemente.</p>
-          )}
-        </section>
-
-        {/* ── DISPOSITIVOS BLOQUEADOS (Fase 3) ── */}
+        {/* ── PAINEL DE SEGURANCA ── */}
         <SecurityPanel />
 
       </main>
