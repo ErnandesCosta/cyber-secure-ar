@@ -30,7 +30,7 @@ Hoje ele funciona bem como **MVP tecnico forte / prova de conceito avancada**.
 - a persistencia ainda e simplificada e baseada em armazenamento em memoria em partes da aplicacao
 - o monitoramento ainda observa principalmente eventos da propria plataforma, nao telemetria OT real
 - o fluxo biometrico visual do login continua como experiencia guiada; o endurecimento real esta no login por passkey
-- a pasta `tests/` ainda nao representa uma suite valida: o `.csproj` e os arquivos de teste estao vazios
+- a suite de testes automatizados foi iniciada, mas ainda cobre uma parte pequena do dominio
 
 ## Proximos passos recomendados
 
@@ -39,7 +39,7 @@ Hoje ele funciona bem como **MVP tecnico forte / prova de conceito avancada**.
 3. Adicionar step-up auth por risco apos o login.
 4. Integrar telemetria OT/IT real ao SOC.
 5. Criar workflow de triagem e playbooks de resposta.
-6. Implementar uma base real de testes automatizados.
+6. Expandir testes automatizados para API, autenticacao e fluxos de risco.
 
 ## Avaliacao objetiva
 

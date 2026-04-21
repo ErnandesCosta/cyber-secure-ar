@@ -76,6 +76,12 @@ dotnet restore
 dotnet run
 ```
 
+Se o Windows mostrar que arquivos em `bin/Debug/net8.0` estao bloqueados por `CyberSecureAR.API`, existe uma API antiga rodando. Pare com:
+
+```powershell
+.\scripts\Stop-CyberSecureBackend.ps1
+```
+
 ### Frontend
 
 ```bash
@@ -111,6 +117,6 @@ Limitacoes atuais:
 
 - persistencia simplificada em memoria em partes do sistema
 - sem integracao OT real
-- sem suite de testes valida ainda
+- suite de testes inicial, ainda pequena
 
 Mais detalhes em [docs/product-status.md](docs/product-status.md).
