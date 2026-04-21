@@ -6,6 +6,31 @@ import { useAuditTrends } from "../hooks/useAuditTrends";
 import { useAuditIncidents } from "../hooks/useAuditIncidents";
 import { SecurityPanel } from "./SecurityPanel";
 
+const exportPDF = async () => {
+  try {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: html2canvas } = await import('html2canvas');
+    const element = document.querySelector('.dashboard-content') as HTMLElement;
+    if (!element) return;
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#0d0d1a',
+      scale: 1,
+      useCORS: true,
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'landscape', format: 'a4' });
+    const date = new Date().toISOString().split('T')[0];
+    pdf.setFontSize(14);
+    pdf.text('CyberSecure AR - Relatório SOC', 14, 12);
+    pdf.setFontSize(9);
+    pdf.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 18);
+    pdf.addImage(imgData, 'PNG', 10, 24, 277, 170);
+    pdf.save(`SOC-Report-${date}.pdf`);
+  } catch {
+    alert('Erro ao gerar PDF. Verifique se jspdf e html2canvas estão instalados.');
+  }
+};
+
 export const DashboardPage = () => {
   const { user, logout } = useAuth();
   const { events, isLoading: eventsLoading, error: eventsError } = useAuditEvents();
@@ -30,12 +55,14 @@ export const DashboardPage = () => {
         <nav className="dashboard-nav">
           <NavLink to="/assistant" className="nav-item">Assistente</NavLink>
           <NavLink to="/dashboard" className="nav-item">Dashboard</NavLink>
+          <NavLink to="/profile" className="nav-item">Perfil</NavLink>
+          <button className="nav-item btn-export-pdf" onClick={exportPDF} title="Exportar relatório PDF">
+            📄 Exportar PDF
+          </button>
           <button className="nav-item logout-button" onClick={logout}>Sair</button>
         </nav>
       </header>
-
       <main className="dashboard-content">
-
         {/* ── CARDS RESUMO ── */}
         <section className="dashboard-panel">
           <div className="panel-header-row">
@@ -188,9 +215,8 @@ export const DashboardPage = () => {
           )}
         </section>
 
-        {/* ── DISPOSITIVOS BLOQUEADOS (Fase 3) ── */}
-                {isManager && <SecurityPanel />}
-
+        {/* ── DISPOSITIVOS BLOQUEADOS (só Manager) ── */}
+        {isManager && <SecurityPanel />}
       </main>
     </div>
   );
