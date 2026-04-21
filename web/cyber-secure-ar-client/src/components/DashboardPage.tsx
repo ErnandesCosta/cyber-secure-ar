@@ -131,11 +131,6 @@ export const DashboardPage = () => {
           )}
         </section>
 
-<<<<<<< HEAD
-        {/* ── PAINEL DE SEGURANCA ── */}
-        <SecurityPanel />
-
-=======
         {/* ── INCIDENTES ATIVOS ── */}
         <section className="dashboard-panel">
           <h2>Incidentes ativos</h2>
@@ -235,7 +230,6 @@ export const DashboardPage = () => {
 
         {/* ── DISPOSITIVOS BLOQUEADOS (só Manager) ── */}
         {isManager && <SecurityPanel />}
->>>>>>> a6b21ae11010fca0cc7368aa288ace0f547aba32
       </main>
     </div>
   );
