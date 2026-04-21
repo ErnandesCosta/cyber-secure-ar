@@ -1,21 +1,21 @@
-import { tokenStorage } from "../utils/tokenStorage";
+﻿import { tokenStorage } from "../utils/tokenStorage";
 import type { LoginRequest, LoginResponse, UserProfile } from "../types/auth";
 import type { AssistantQueryDto, AssistantResponseDto } from "../types/query";
 import type { ApiErrorResponse } from "../types/api";
 import type {
-  SecurityAuditDto,
+  AuditIncidentDto,
   AuditSummaryDto,
   AuditTrendDto,
-  AuditIncidentDto,
+  SecurityAuditDto,
 } from "../types/audit";
-import type { BlockedDeviceDto, AnomalyResultDto } from "../types/security";
+import type { AnomalyResultDto, BlockedDeviceDto } from "../types/security";
 
-const BASE_URL  = import.meta.env.VITE_API_URL   || "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
 
 const getHeaders = (): HeadersInit => ({
-  "Content-Type":     "application/json",
-  "X-Device-Id":      DEVICE_ID,
+  "Content-Type": "application/json",
+  "X-Device-Id": DEVICE_ID,
   "X-Correlation-Id": crypto.randomUUID(),
   ...(tokenStorage.getToken()
     ? { Authorization: `Bearer ${tokenStorage.getToken()}` }
@@ -25,22 +25,30 @@ const getHeaders = (): HeadersInit => ({
 const handleResponse = async <T>(res: Response): Promise<T> => {
   if (!res.ok) {
     const error: ApiErrorResponse = await res.json().catch(() => ({
-      error:      "UNKNOWN",
-      message:    `HTTP ${res.status}`,
+      error: "UNKNOWN",
+      message: `HTTP ${res.status}`,
       statusCode: res.status,
-      timestamp:  new Date().toISOString(),
+      timestamp: new Date().toISOString(),
     }));
+
     throw new Error(error.message || "Erro inesperado.");
   }
+
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
   return res.json() as Promise<T>;
 };
 
 export const apiService = {
-  // ── Auth ──
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const res = await fetch(`${BASE_URL}/api/auth/login`, {
-      method: "POST", headers: getHeaders(), body: JSON.stringify(data),
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
     });
+
     return handleResponse<LoginResponse>(res);
   },
 
@@ -49,16 +57,16 @@ export const apiService = {
     return handleResponse<UserProfile>(res);
   },
 
-  // ── Assistente ──
   query: async (data: AssistantQueryDto): Promise<AssistantResponseDto> => {
     const res = await fetch(`${BASE_URL}/api/assistant/query`, {
-      method: "POST", headers: getHeaders(),
+      method: "POST",
+      headers: getHeaders(),
       body: JSON.stringify({ ...data, deviceId: DEVICE_ID }),
     });
+
     return handleResponse<AssistantResponseDto>(res);
   },
 
-  // ── Auditoria ──
   getAuditEvents: async (): Promise<SecurityAuditDto[]> => {
     const res = await fetch(`${BASE_URL}/api/audit/events`, { headers: getHeaders() });
     return handleResponse<SecurityAuditDto[]>(res);
@@ -79,20 +87,27 @@ export const apiService = {
     return handleResponse<AuditIncidentDto[]>(res);
   },
 
-  // ── Segurança ──
   getBlockedDevices: async (): Promise<BlockedDeviceDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/security/blocked-devices`, { headers: getHeaders() });
+    const res = await fetch(`${BASE_URL}/api/security/blocked-devices`, {
+      headers: getHeaders(),
+    });
     return handleResponse<BlockedDeviceDto[]>(res);
   },
 
   unblockDevice: async (deviceId: string): Promise<void> => {
-    await fetch(`${BASE_URL}/api/security/blocked-devices/${deviceId}`, {
-      method: "DELETE", headers: getHeaders(),
+    const res = await fetch(`${BASE_URL}/api/security/blocked-devices/${deviceId}`, {
+      method: "DELETE",
+      headers: getHeaders(),
     });
+
+    await handleResponse<void>(res);
   },
 
   checkAnomaly: async (deviceId: string): Promise<AnomalyResultDto> => {
-    const res = await fetch(`${BASE_URL}/api/security/anomalies/${deviceId}`, { headers: getHeaders() });
+    const res = await fetch(`${BASE_URL}/api/security/anomalies/${deviceId}`, {
+      headers: getHeaders(),
+    });
+
     return handleResponse<AnomalyResultDto>(res);
   },
 };

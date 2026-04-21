@@ -1,49 +1,48 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+﻿import { NavLink, useNavigate } from "react-router-dom";
+import {
+  ArrowLeftIcon,
+  ArrowRightOnRectangleIcon,
+  CheckBadgeIcon,
+  CpuChipIcon,
+  IdentificationIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
+import { useAuth } from "../hooks/useAuth";
+
+const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || "AR-GLASSES-DEMO-001";
 
 const roleLabels: Record<string, string> = {
-  Technician: 'Técnico de Campo',
-  Specialist: 'Especialista de Segurança',
-  Manager: 'Gestor SOC',
-};
-
-const roleColors: Record<string, string> = {
-  Technician: '#00aaff',
-  Specialist: '#ffaa00',
-  Manager: '#00ff88',
+  Technician: "Técnico de Campo",
+  Specialist: "Especialista de Segurança",
+  Manager: "Gestor SOC",
 };
 
 const rolePermissions: Record<string, string[]> = {
   Technician: [
-    'Consultar assistente IA',
-    'Ver procedimentos do seu perfil',
-    'Acesso de leitura a manuais autorizados',
-    'Autenticação por dispositivo registrado',
+    "Consultar assistente IA com escopo controlado.",
+    "Visualizar procedimentos e instruções autorizadas.",
+    "Operar com autenticação por dispositivo registrado.",
   ],
   Specialist: [
-    'Consultar assistente IA',
-    'Ver todos os procedimentos técnicos',
-    'Análise de anomalias por dispositivo',
-    'Acesso ao histórico de eventos',
+    "Consultar procedimentos avançados e contexto de segurança.",
+    "Acompanhar eventos e incidentes do próprio escopo.",
+    "Analisar comportamento anômalo por dispositivo.",
   ],
   Manager: [
-    'Dashboard SOC completo em tempo real',
-    'Desbloquear dispositivos suspeitos',
-    'Exportar relatórios de auditoria',
-    'Gerenciar e monitorar todos os perfis',
-    'Visão do Risk Score global',
+    "Acessar dashboard SOC completo em tempo real.",
+    "Visualizar incidentes, tendências e ações correlacionadas.",
+    "Desbloquear dispositivos e exportar relatório operacional.",
   ],
 };
 
 const roleRestrictions: Record<string, string[]> = {
   Technician: [
-    'Não acessa dados de outros técnicos',
-    'Não acessa painel SOC',
-    'Não pode desbloquear dispositivos',
+    "Não acessa dispositivos bloqueados globais.",
+    "Não administra políticas nem bloqueios de terceiros.",
   ],
   Specialist: [
-    'Não acessa painel SOC',
-    'Não pode desbloquear dispositivos',
+    "Não executa desbloqueios administrativos.",
+    "Não recebe visão global completa de todos os ativos.",
   ],
   Manager: [],
 };
@@ -52,93 +51,152 @@ export const ProfilePage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const role = user?.role ?? 'Technician';
-  const color = roleColors[role] ?? '#00f5ff';
-  const initial = (user?.username?.[0] ?? 'U').toUpperCase();
+  const role = user?.role ?? "Technician";
+  const initial = (user?.fullName ?? user?.username ?? "U").charAt(0).toUpperCase();
 
   return (
-    <div className="profile-page">
-      <div className="profile-header">
-        <button className="btn-back" onClick={() => navigate(-1)}>
-          ← Voltar
-        </button>
-        <h1>Perfil do Usuário</h1>
-      </div>
-
-      <div className="profile-layout">
-        {/* Card principal */}
-        <div className="profile-card">
-          <div className="profile-avatar" style={{ borderColor: color, color }}>
-            {initial}
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand-block">
+          <div className="brand-mark">
+            <IdentificationIcon />
           </div>
-          <h2 className="profile-username">{user?.username ?? 'Usuário'}</h2>
-          <span className="profile-role-badge" style={{ background: color + '22', color, border: `1px solid ${color}` }}>
-            {roleLabels[role] ?? role}
-          </span>
-
-          <div className="profile-device-card">
-            <div className="profile-device-label">Device ID</div>
-            <code className="profile-device-id">{user?.deviceId ?? 'AR-GLASSES-001'}</code>
-            <div className="profile-device-status">
-              <span className="status-dot"></span>
-              Dispositivo registrado e ativo
-            </div>
-          </div>
-
-          <div className="profile-meta">
-            <div className="meta-item">
-              <span className="meta-label">Autenticação</span>
-              <span className="meta-value">JWT + Device ID</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">2º Fator</span>
-              <span className="meta-value">Biométrico</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Sessão</span>
-              <span className="meta-value">Ativa</span>
-            </div>
+          <div>
+            <div className="eyebrow">CyberSecure AR</div>
+            <h1>Perfil e postura de acesso</h1>
           </div>
         </div>
 
-        {/* Permissoes e restricoes */}
-        <div className="profile-permissions-panel">
-          <div className="permissions-section">
-            <h3>✅ Permissões do Perfil</h3>
-            <ul className="permissions-list">
-              {(rolePermissions[role] ?? []).map((p) => (
-                <li key={p} className="permission-item allowed">{p}</li>
-              ))}
-            </ul>
-          </div>
+        <nav className="primary-nav">
+          <NavLink to="/assistant" className="nav-item">
+            Assistente
+          </NavLink>
+          <NavLink to="/dashboard" className="nav-item">
+            Dashboard
+          </NavLink>
+          {user?.role === "Manager" && (
+            <NavLink to="/admin" className="nav-item">
+              Admin
+            </NavLink>
+          )}
+          <NavLink to="/profile" className="nav-item">
+            Perfil
+          </NavLink>
+        </nav>
 
-          {(roleRestrictions[role] ?? []).length > 0 && (
-            <div className="permissions-section">
-              <h3>🚫 Restrições Ativas</h3>
-              <ul className="permissions-list">
-                {roleRestrictions[role].map((r) => (
-                  <li key={r} className="permission-item denied">{r}</li>
+        <div className="topbar-actions">
+          <button className="ghost-button" onClick={() => navigate(-1)}>
+            <ArrowLeftIcon />
+            Voltar
+          </button>
+          <button
+            className="ghost-button"
+            onClick={() => {
+              logout();
+              navigate("/");
+            }}
+          >
+            <ArrowRightOnRectangleIcon />
+            Sair
+          </button>
+        </div>
+      </header>
+
+      <main className="page-content">
+        <section className="workspace-layout profile-layout">
+          <article className="panel-surface profile-card">
+            <div className="profile-avatar">{initial}</div>
+            <h2>{user?.fullName ?? "Usuário"}</h2>
+            <p className="profile-username">@{user?.username ?? "usuario"}</p>
+            <span className="status-pill safe">{roleLabels[role]}</span>
+
+            <div className="profile-info-grid">
+              <div className="profile-info-row">
+                <span>Departamento</span>
+                <strong>{user?.department ?? "Operações"}</strong>
+              </div>
+              <div className="profile-info-row">
+                <span>Device ID</span>
+                <strong>{DEVICE_ID}</strong>
+              </div>
+              <div className="profile-info-row">
+                <span>Autenticação</span>
+                <strong>JWT + Device Trust</strong>
+              </div>
+              <div className="profile-info-row">
+                <span>Segundo fator</span>
+                <strong>WebAuthn / biometria</strong>
+              </div>
+            </div>
+          </article>
+
+          <div className="stack-grid">
+            <section className="panel-surface">
+              <div className="panel-heading">
+                <div>
+                  <div className="section-tag">Permissões</div>
+                  <h3>O que este perfil pode fazer</h3>
+                </div>
+              </div>
+
+              <ul className="insight-list">
+                {rolePermissions[role].map((permission) => (
+                  <li key={permission}>
+                    <CheckBadgeIcon />
+                    <span>{permission}</span>
+                  </li>
                 ))}
               </ul>
-            </div>
-          )}
+            </section>
 
-          <div className="permissions-section">
-            <h3>🔒 Política de Segurança</h3>
-            <ul className="permissions-list">
-              <li className="permission-item info">Acesso negado gera alerta automático no SOC</li>
-              <li className="permission-item info">Todos os eventos são auditados em tempo real</li>
-              <li className="permission-item info">Dispositivo não registrado é bloqueado automaticamente</li>
-            </ul>
+            {roleRestrictions[role].length > 0 && (
+              <section className="panel-surface">
+                <div className="panel-heading">
+                  <div>
+                    <div className="section-tag">Restrições</div>
+                    <h3>Limites ativos do papel</h3>
+                  </div>
+                </div>
+
+                <ul className="insight-list danger-list">
+                  {roleRestrictions[role].map((restriction) => (
+                    <li key={restriction}>
+                      <ShieldCheckIcon />
+                      <span>{restriction}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section className="panel-surface">
+              <div className="panel-heading">
+                <div>
+                  <div className="section-tag">Postura</div>
+                  <h3>Reforços sugeridos</h3>
+                </div>
+              </div>
+
+              <div className="recommendation-grid">
+                <article className="mini-card">
+                  <CpuChipIcon />
+                  <div>
+                    <strong>Trust por dispositivo</strong>
+                    <p>Vincule o deviceId a attestation ou inventário de ativo confiável.</p>
+                  </div>
+                </article>
+                <article className="mini-card">
+                  <ShieldCheckIcon />
+                  <div>
+                    <strong>Autenticação adaptativa</strong>
+                    <p>Eleve o nível de verificação quando houver anomalia, risco ou troca de contexto.</p>
+                  </div>
+                </article>
+              </div>
+            </section>
           </div>
-        </div>
-      </div>
-
-      <div className="profile-actions">
-        <button className="btn-logout-profile" onClick={() => { logout(); navigate('/'); }}>
-          Sair da Conta
-        </button>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };

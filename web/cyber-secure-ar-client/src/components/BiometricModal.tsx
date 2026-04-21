@@ -1,6 +1,12 @@
-import { useState } from 'react';
+﻿import { useMemo, useState } from "react";
+import {
+  CheckBadgeIcon,
+  FingerPrintIcon,
+  ShieldExclamationIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
-type BiometricStatus = 'idle' | 'scanning' | 'approved' | 'denied';
+type BiometricStatus = "idle" | "checking" | "approved" | "unavailable";
 
 interface BiometricModalProps {
   onSuccess: () => void;
@@ -8,73 +14,81 @@ interface BiometricModalProps {
 }
 
 export const BiometricModal = ({ onSuccess, onCancel }: BiometricModalProps) => {
-  const [status, setStatus] = useState<BiometricStatus>('idle');
+  const [status, setStatus] = useState<BiometricStatus>("idle");
 
-  const startScan = () => {
-    setStatus('scanning');
+  const message = useMemo(() => {
+    if (status === "checking") return "Verificando suporte do autenticador da plataforma...";
+    if (status === "approved") return "Confirmação local concluída. Redirecionando.";
+    if (status === "unavailable") {
+      return "Este ambiente não expõe WebAuthn de plataforma. O login segue em modo demonstrativo.";
+    }
+    return "Use a biometria nativa do dispositivo como segundo fator quando disponível.";
+  }, [status]);
+
+  const startScan = async () => {
+    setStatus("checking");
+
+    const hasPlatformAuthenticator =
+      typeof window !== "undefined" &&
+      "PublicKeyCredential" in window &&
+      typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === "function" &&
+      (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+
     setTimeout(() => {
-      setStatus('approved');
-      setTimeout(onSuccess, 800);
-    }, 2200);
+      if (hasPlatformAuthenticator) {
+        setStatus("approved");
+        setTimeout(onSuccess, 850);
+        return;
+      }
+
+      setStatus("unavailable");
+      setTimeout(onSuccess, 1200);
+    }, 1200);
   };
 
   return (
     <div className="biometric-overlay">
       <div className="biometric-modal">
-        <h2>Verificação Biométrica</h2>
-        <p className="biometric-subtitle">Segunda camada de autenticação — CyberSecure AR</p>
+        <button className="biometric-close" onClick={onCancel} aria-label="Fechar modal">
+          <XMarkIcon />
+        </button>
 
-        <div className={`fingerprint-icon ${status}`}>
-          {status === 'idle' && (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#00f5ff" strokeWidth="2" width="80" height="80">
-              <path d="M32 8C18.7 8 8 18.7 8 32s10.7 24 24 24 24-10.7 24-24S45.3 8 32 8z"/>
-              <path d="M32 16c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16z"/>
-              <path d="M32 24c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z"/>
-              <line x1="32" y1="32" x2="32" y2="32" strokeWidth="4"/>
-            </svg>
-          )}
-          {status === 'scanning' && (
-            <div className="scan-animation">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#00f5ff" strokeWidth="2" width="80" height="80">
-                <path d="M32 8C18.7 8 8 18.7 8 32s10.7 24 24 24 24-10.7 24-24S45.3 8 32 8z"/>
-                <path d="M32 16c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16z"/>
-                <path d="M32 24c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z"/>
-              </svg>
-              <div className="scan-line"></div>
-            </div>
-          )}
-          {status === 'approved' && (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#00ff88" strokeWidth="3" width="80" height="80">
-              <circle cx="32" cy="32" r="28" stroke="#00ff88" strokeWidth="2"/>
-              <polyline points="20,32 28,40 44,24" stroke="#00ff88" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
-          )}
-          {status === 'denied' && (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#ff4444" strokeWidth="3" width="80" height="80">
-              <circle cx="32" cy="32" r="28" stroke="#ff4444" strokeWidth="2"/>
-              <line x1="22" y1="22" x2="42" y2="42" stroke="#ff4444" strokeWidth="3" strokeLinecap="round"/>
-              <line x1="42" y1="22" x2="22" y2="42" stroke="#ff4444" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
-          )}
+        <div className={`biometric-visual biometric-${status}`}>
+          {status === "approved" ? <CheckBadgeIcon /> : <FingerPrintIcon />}
         </div>
 
-        {status === 'idle' && (
-          <button className="btn-biometric" onClick={startScan}>
-            Iniciar Verificação Biométrica
+        <h2>Verificação biométrica</h2>
+        <p className="biometric-subtitle">{message}</p>
+
+        <div className="biometric-meta">
+          <span>Fator local</span>
+          <strong>Face ID / digital / passkey</strong>
+        </div>
+        <div className="biometric-meta">
+          <span>Padrão sugerido</span>
+          <strong>WebAuthn com autenticador de plataforma</strong>
+        </div>
+
+        {status === "idle" && (
+          <button className="btn-biometric btn-primary" onClick={startScan}>
+            <FingerPrintIcon />
+            Iniciar verificação
           </button>
         )}
-        {status === 'scanning' && (
-          <p className="scan-text">Escaneando impressão digital...</p>
-        )}
-        {status === 'approved' && (
-          <p className="success-text">Identidade confirmada. Redirecionando...</p>
-        )}
-        {status === 'denied' && (
-          <p className="error-text">Verificação falhou. Tente novamente.</p>
+
+        {status === "checking" && <p className="scan-text">Validando autenticador...</p>}
+
+        {status === "unavailable" && (
+          <div className="biometric-warning">
+            <ShieldExclamationIcon />
+            <span>Sem suporte nativo detectado neste navegador ou dispositivo.</span>
+          </div>
         )}
 
-        {(status === 'idle' || status === 'denied') && (
-          <button className="btn-cancel" onClick={onCancel}>Cancelar</button>
+        {(status === "idle" || status === "unavailable") && (
+          <button className="btn-cancel" onClick={onCancel}>
+            Cancelar
+          </button>
         )}
       </div>
     </div>

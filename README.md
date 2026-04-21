@@ -33,6 +33,7 @@
 - [Fluxo de Segurança](#-fluxo-de-segurança)
 - [Como a IA trabalha](#-como-a-ia-trabalha)
 - [SOC — Centro de Operações de Segurança](#-soc--centro-de-operaes-de-seguran-a)
+- [Status Atual do Produto](#-status-atual-do-produto)
 - [Contribuindo](#-contribuindo)
 - [Equipe](#-equipe)
 
@@ -62,6 +63,26 @@ Técnicos de campo precisam acessar informações sensíveis em tempo real enqua
 [Log de Auditoria]
 
 O fluxo combina autenticação, verificação de dispositivo e filtragem de IA para garantir que apenas informações autorizadas sejam retornadas.
+
+---
+
+## 🚦 Status Atual do Produto
+
+O projeto está em um ponto forte de **MVP técnico / prova de conceito avançada**. Hoje ele já entrega:
+
+- login com identidade + contexto de dispositivo
+- assistente operacional com resposta auditável
+- dashboard SOC com risco, eventos, tendências e incidentes
+- área administrativa dedicada para gestores (`/admin`)
+- fluxo visual preparado para segundo fator biométrico / WebAuthn
+
+O que ainda não está concluído ponta a ponta:
+
+- registro e autenticação WebAuthn no backend
+- inventário confiável de dispositivos com attestation
+- integração com telemetria OT/IT real
+
+Mais detalhes em [docs/product-status.md](docs/product-status.md).
 
 ---
 
@@ -120,6 +141,8 @@ O projeto segue os princípios de **Clean Architecture**, garantindo separação
 | TypeScript | 5.x | Tipagem estática |
 | Vite | 6.x | Build tool |
 | React Router DOM | 7.x | Roteamento |
+| Recharts | 3.x | Visualização de métricas SOC |
+| Heroicons | 2.x | Ícones do frontend |
 
 ### Infraestrutura
 | Tecnologia | Uso |
@@ -234,6 +257,7 @@ dotnet run
 cd web/cyber-secure-ar-client
 npm install
 npm run dev
+npm run build
 ```
 
 ---
@@ -266,7 +290,7 @@ VITE_API_URL=http://localhost:5000
 VITE_DEVICE_ID=AR-GLASSES-DEMO-001
 ```
 
-📡 Endpoints da API
+## 📡 Endpoints da API
 
 ### Autenticação
 | Método | Endpoint | Descrição | Auth |
@@ -278,7 +302,21 @@ VITE_DEVICE_ID=AR-GLASSES-DEMO-001
 | Método | Endpoint | Descrição | Auth |
 |---|---|---|---|
 | POST | `/api/assistant/query` | Envia consulta ao assistente de segurança | ✅ |
-| GET | `/api/audit/events` | Retorna eventos de auditoria do usuário | ✅ |
+
+### Auditoria e SOC
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/api/audit/events` | Retorna eventos de auditoria | ✅ |
+| GET | `/api/audit/summary` | Retorna resumo SOC | ✅ |
+| GET | `/api/audit/trends` | Retorna tendência de risco | ✅ |
+| GET | `/api/audit/incidents` | Retorna incidentes correlacionados | ✅ |
+
+### Segurança
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/api/security/blocked-devices` | Lista dispositivos bloqueados | ✅ Manager |
+| DELETE | `/api/security/blocked-devices/{deviceId}` | Desbloqueia dispositivo | ✅ Manager |
+| GET | `/api/security/anomalies/{deviceId}` | Executa análise de anomalia | ✅ |
 
 ### Exemplos de Request
 
@@ -331,6 +369,23 @@ Authorization: Bearer {token}
 - Alertas de consultas não autorizadas ou comportamentos suspeitos.
 - Controle de acesso baseado em perfil e trust de dispositivo.
 - Logs de auditoria que permitem rastrear ações de segurança e conformidade.
+- Tela administrativa exclusiva para gestores com triagem e priorização operacional.
+
+### Rotas do Frontend
+
+| Rota | Objetivo | Perfil |
+|---|---|---|
+| `/` | Login | Público |
+| `/assistant` | Assistente operacional | Autenticado |
+| `/dashboard` | Dashboard SOC | Autenticado |
+| `/admin` | Monitoramento administrativo | Manager |
+| `/profile` | Perfil e postura de acesso | Autenticado |
+
+### Biometria e Passkeys
+
+- O frontend já possui experiência visual de segundo fator e validação de suporte local ao autenticador de plataforma.
+- A implementação **ainda não é WebAuthn completa no backend**.
+- A evolução recomendada é usar **passkeys/WebAuthn** com verificação local no dispositivo e step-up auth por risco.
 
 ### Exceções de Segurança Tratadas
 | Exceção | Código HTTP | Descrição |
