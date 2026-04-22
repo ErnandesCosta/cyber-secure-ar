@@ -2,6 +2,18 @@
 
 Plataforma de seguranca operacional com IA, passkeys e monitoramento SOC para cenarios com smart glasses e operacao critica.
 
+## Documentacao
+
+Para uma explicacao completa do projeto, leia:
+
+- [Documentacao principal](docs/project-documentation.md)
+- [Arquitetura](docs/architecture.md)
+- [Seguranca](docs/security.md)
+- [Fluxo de demonstracao](docs/demo-flow.md)
+- [API](docs/api-spec.md)
+- [Deploy e execucao](docs/deployment.md)
+- [Status do produto](docs/product-status.md)
+
 ## Visao geral
 
 O projeto combina:
@@ -119,4 +131,4 @@ Limitacoes atuais:
 - sem integracao OT real
 - suite de testes inicial, ainda pequena
 
-Mais detalhes em [docs/product-status.md](docs/product-status.md).
+Mais detalhes em [docs/project-documentation.md](docs/project-documentation.md) e [docs/product-status.md](docs/product-status.md).
