@@ -49,9 +49,23 @@ const handleResponse = async <T>(res: Response): Promise<T> => {
   return res.json() as Promise<T>;
 };
 
+const request = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        `Nao foi possivel conectar na API em ${BASE_URL}. Verifique se o backend esta rodando com dotnet run.`,
+      );
+    }
+
+    throw error;
+  }
+};
+
 export const apiService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    const res = await request(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -61,19 +75,19 @@ export const apiService = {
   },
 
   getMe: async (): Promise<UserProfile> => {
-    const res = await fetch(`${BASE_URL}/api/auth/me`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/auth/me`, { headers: getHeaders() });
     return handleResponse<UserProfile>(res);
   },
 
   getPasskeys: async (): Promise<PasskeyCredentialDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/passkeys`, { headers: getHeaders() });
     return handleResponse<PasskeyCredentialDto[]>(res);
   },
 
   beginPasskeyRegistration: async (
     data: BeginPasskeyRegistrationRequest,
   ): Promise<PasskeyRegistrationOptions> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys/registration/options`, {
+    const res = await request(`${BASE_URL}/api/passkeys/registration/options`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -84,7 +98,7 @@ export const apiService = {
   finishPasskeyRegistration: async (
     data: PasskeyRegistrationResponse,
   ): Promise<PasskeyCredentialDto> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys/registration/verify`, {
+    const res = await request(`${BASE_URL}/api/passkeys/registration/verify`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -93,7 +107,7 @@ export const apiService = {
   },
 
   beginPasskeyAuthentication: async (username: string): Promise<PasskeyAuthenticationOptions> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys/authentication/options`, {
+    const res = await request(`${BASE_URL}/api/passkeys/authentication/options`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ username }),
@@ -104,7 +118,7 @@ export const apiService = {
   verifyPasskeyAuthentication: async (
     data: VerifyPasskeyAuthenticationRequest,
   ): Promise<LoginResponse> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys/authentication/verify`, {
+    const res = await request(`${BASE_URL}/api/passkeys/authentication/verify`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -113,7 +127,7 @@ export const apiService = {
   },
 
   deletePasskey: async (credentialId: string): Promise<void> => {
-    const res = await fetch(`${BASE_URL}/api/passkeys/${credentialId}`, {
+    const res = await request(`${BASE_URL}/api/passkeys/${credentialId}`, {
       method: "DELETE",
       headers: getHeaders(),
     });
@@ -121,7 +135,7 @@ export const apiService = {
   },
 
   query: async (data: AssistantQueryDto): Promise<AssistantResponseDto> => {
-    const res = await fetch(`${BASE_URL}/api/assistant/query`, {
+    const res = await request(`${BASE_URL}/api/assistant/query`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ ...data, deviceId: DEVICE_ID }),
@@ -131,34 +145,34 @@ export const apiService = {
   },
 
   getAuditEvents: async (): Promise<SecurityAuditDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/audit/events`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/audit/events`, { headers: getHeaders() });
     return handleResponse<SecurityAuditDto[]>(res);
   },
 
   getAuditSummary: async (): Promise<AuditSummaryDto> => {
-    const res = await fetch(`${BASE_URL}/api/audit/summary`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/audit/summary`, { headers: getHeaders() });
     return handleResponse<AuditSummaryDto>(res);
   },
 
   getAuditTrends: async (): Promise<AuditTrendDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/audit/trends`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/audit/trends`, { headers: getHeaders() });
     return handleResponse<AuditTrendDto[]>(res);
   },
 
   getAuditIncidents: async (): Promise<AuditIncidentDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/audit/incidents`, { headers: getHeaders() });
+    const res = await request(`${BASE_URL}/api/audit/incidents`, { headers: getHeaders() });
     return handleResponse<AuditIncidentDto[]>(res);
   },
 
   getBlockedDevices: async (): Promise<BlockedDeviceDto[]> => {
-    const res = await fetch(`${BASE_URL}/api/security/blocked-devices`, {
+    const res = await request(`${BASE_URL}/api/security/blocked-devices`, {
       headers: getHeaders(),
     });
     return handleResponse<BlockedDeviceDto[]>(res);
   },
 
   unblockDevice: async (deviceId: string): Promise<void> => {
-    const res = await fetch(`${BASE_URL}/api/security/blocked-devices/${deviceId}`, {
+    const res = await request(`${BASE_URL}/api/security/blocked-devices/${deviceId}`, {
       method: "DELETE",
       headers: getHeaders(),
     });
@@ -167,7 +181,7 @@ export const apiService = {
   },
 
   checkAnomaly: async (deviceId: string): Promise<AnomalyResultDto> => {
-    const res = await fetch(`${BASE_URL}/api/security/anomalies/${deviceId}`, {
+    const res = await request(`${BASE_URL}/api/security/anomalies/${deviceId}`, {
       headers: getHeaders(),
     });
 

@@ -56,6 +56,17 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(allowedOrigins)
+            .SetIsOriginAllowed(origin =>
+            {
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                {
+                    return false;
+                }
+
+                return uri.Scheme is "http" or "https"
+                    && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                        || uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase));
+            })
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
